@@ -197,6 +197,51 @@
             width: 60px;
             padding: 25px 15px;
         }
+        .sidebar.collapsed .sidebar-section {
+    display: none;
+}
+
+.sidebar.collapsed .upload-btn {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-toggle {
+    margin-bottom: 0;
+    text-align: center;
+    font-size: 1.4em;
+}
+
+/* Optional: Add a tooltip for the collapsed toggle button */
+.sidebar.collapsed .sidebar-toggle {
+    position: relative;
+}
+
+.sidebar.collapsed .sidebar-toggle:hover::after {
+    content: 'Expand sidebar';
+    position: absolute;
+    left: 70px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.8em;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.sidebar.collapsed .sidebar-toggle:hover::before {
+    content: '';
+    position: absolute;
+    left: 62px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 6px solid transparent;
+    border-right-color: #333;
+    z-index: 1000;
+}
 
         .sidebar-toggle {
             background: none;
@@ -1024,10 +1069,43 @@ function resetApplicationState() {
 
     // Sidebar toggle
     sidebarToggle.addEventListener('click', () => {
-        isCollapsed = !isCollapsed;
-        sidebar.classList.toggle('collapsed', isCollapsed);
-        sidebarToggle.textContent = isCollapsed ? '→' : '☰';
-    });
+    isCollapsed = !isCollapsed;
+    sidebar.classList.toggle('collapsed', isCollapsed);
+    
+    // Enhanced toggle button text with better icons
+    if (isCollapsed) {
+        sidebarToggle.textContent = '→';
+        sidebarToggle.title = 'Expand sidebar';
+        console.log('Sidebar collapsed');
+    } else {
+        sidebarToggle.textContent = '☰';
+        sidebarToggle.title = 'Collapse sidebar';
+        console.log('Sidebar expanded');
+    }
+    
+    // Optional: Save collapse state to localStorage for persistence
+    try {
+        localStorage.setItem('sidebarCollapsed', isCollapsed);
+    } catch (e) {
+        // localStorage not available, that's fine
+    }
+});
+
+// Restore sidebar collapse state on page load
+try {
+    const savedState = localStorage.getItem('sidebarCollapsed');
+    if (savedState === 'true') {
+        isCollapsed = true;
+        sidebar.classList.add('collapsed');
+        sidebarToggle.textContent = '→';
+        sidebarToggle.title = 'Expand sidebar';
+    } else {
+        sidebarToggle.title = 'Collapse sidebar';
+    }
+} catch (e) {
+    // localStorage not available, use default state
+    sidebarToggle.title = 'Collapse sidebar';
+}
 
     // Tab switching
     document.querySelectorAll('.tab').forEach(tab => {
