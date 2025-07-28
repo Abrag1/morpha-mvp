@@ -285,7 +285,7 @@ app.post('/upload', uploadLimiter, upload.single('document'), async (req, res) =
 
         // Enhanced analysis prompt with token estimation
 const analysisPrompt = `
-You are a legal contract expert analyzing a document. Analyze the provided text and classify it into one of these specific categories:
+You are a legal contract expert analyzing a document. Analyze the provided text and classify it into one of these specific categories with INTELLIGENT RISK ASSESSMENT.
 
 DOCUMENT TYPES TO CHOOSE FROM:
 1. "Rental/Lease Agreement" - Residential or commercial property rental, lease agreements, tenancy contracts
@@ -306,12 +306,62 @@ CLASSIFICATION KEYWORDS TO LOOK FOR:
 - Loan: "borrower", "lender", "principal", "interest rate", "loan amount", "repayment", "mortgage"
 - NDA: "confidential", "non-disclosure", "proprietary", "trade secrets", "confidentiality"
 
+INTELLIGENT RISK ASSESSMENT CRITERIA:
+
+FOR RENTAL/LEASE AGREEMENTS:
+HIGH RISK: Security deposit >200% monthly rent, unlimited rent increases, tenant liable for most repairs, <30 days termination notice, late fees >10% rent
+MEDIUM RISK: Security deposit 150-200% monthly rent, rent increases 5-10% annually, mixed repair responsibilities, 30-60 day notices, late fees 5-10% rent
+LOW RISK: Security deposit ≤150% monthly rent, rent increases ≤5% annually, landlord handles major repairs, 60+ days notice, late fees ≤5% rent
+
+FOR EMPLOYMENT CONTRACTS:
+HIGH RISK: No specified salary, non-compete >12 months or unlimited geography, company owns all personal work, no termination notice, personal liability for losses
+MEDIUM RISK: Basic salary specified, non-compete 6-12 months with reasonable geography, some unclear personal work ownership, 1-4 weeks notice, standard confidentiality
+LOW RISK: Clear compensation package, non-compete ≤6 months with limited scope, employee retains personal rights, 4+ weeks notice/severance, fair IP terms
+
+FOR BRAND PARTNERSHIP/SPONSORSHIP:
+HIGH RISK: Payment below market rate, exclusive rights without guarantees, unlimited usage rights, can terminate without paying completed work, personal liability for brand performance
+MEDIUM RISK: Payment 50-80% of market rate, limited exclusivity with fair compensation, standard usage rights, some protection for completed work, reasonable expectations
+LOW RISK: Market-rate compensation, balanced exclusivity, creator retains content rights, payment protected for delivered work, mutual performance standards
+
+FOR SERVICE AGREEMENTS:
+HIGH RISK: No payment schedule, unlimited scope creep, contractor liable for all project risks, can terminate without payment, no IP protection
+MEDIUM RISK: Basic payment terms, some scope definition, shared project risks, reasonable termination clause, standard IP terms
+LOW RISK: Clear payment milestones, well-defined scope, client assumes project risks, fair termination with payment, contractor retains some IP
+
+FOR PURCHASE AGREEMENTS:
+HIGH RISK: No price protection, buyer assumes all risks, no inspection rights, immediate payment required, no recourse for defects
+MEDIUM RISK: Some price protection, shared risks, limited inspection period, standard payment terms, basic warranty coverage
+LOW RISK: Strong price protection, seller assumes major risks, thorough inspection rights, protected payment schedule, comprehensive warranties
+
+FOR LOAN DOCUMENTS:
+HIGH RISK: Interest rate significantly above market, personal guarantees required, immediate acceleration clauses, no grace periods, severe penalties
+MEDIUM RISK: Market-rate interest, limited personal guarantees, standard acceleration terms, short grace periods, reasonable penalties
+LOW RISK: Below-market interest, no personal guarantees, fair acceleration terms, adequate grace periods, minimal penalties
+
+FOR NDA/CONFIDENTIALITY:
+HIGH RISK: Unlimited time period, overly broad definition of confidential info, severe penalties, no mutual protection, covers publicly available info
+MEDIUM RISK: 2-5 year period, reasonably defined confidential info, standard penalties, some mutual aspects, some public info exclusions
+LOW RISK: Limited time period (≤2 years), narrowly defined confidential info, reasonable penalties, mutual protection, clear public info exclusions
+
+RISK FACTOR WEIGHTING (Most to Least Important):
+1. Payment/Financial terms (highest weight)
+2. Termination/Exit clauses
+3. Liability/Legal exposure  
+4. Scope/Deliverables clarity
+5. Standard protective clauses (lowest weight)
+
+MISSING INFORMATION HANDLING:
+- Critical clauses missing (payment, termination) → Minimum MEDIUM risk
+- Standard clauses missing → Low impact on risk assessment
+- Protective clauses missing → Slight risk increase
+
 INSTRUCTIONS:
 1. Read the document text carefully
-2. Look for the keywords and language patterns above
-3. Choose the MOST APPROPRIATE category from the 7 types listed
-4. If the text extraction is incomplete due to scanning, make your best classification based on available text
-5. If truly unclear, use "Other" but provide reasoning
+2. Classify the document type using the keywords above
+3. Apply the specific risk criteria for that document type
+4. Weight the risk factors by importance (payment terms matter most)
+5. Consider missing critical information as a risk factor
+6. Provide specific reasoning for the risk level assigned
 
 Available text from document:
 ${extractedText.substring(0, 6000)}
@@ -320,13 +370,14 @@ Provide analysis in JSON format:
 {
     "documentType": "EXACT category name from list above",
     "summary": "string (include note if scanned/limited text)",
-    "risks": ["array of risk strings - include common risks for this document type"],
+    "risks": ["array of specific risk strings based on the criteria above"],
     "keyDates": ["array of important dates if found"],
     "financialTerms": ["array of financial terms if found"],
     "riskLevel": "low|medium|high",
     "isScanned": boolean (true if appears to be scanned with limited text),
     "classificationConfidence": "high|medium|low",
-    "classificationReason": "Brief explanation of why this classification was chosen"
+    "classificationReason": "Brief explanation of why this classification was chosen",
+    "riskAssessmentReason": "Detailed explanation of why this risk level was assigned, citing specific clauses or missing protections"
 }
 `;
 
