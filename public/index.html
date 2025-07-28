@@ -152,6 +152,20 @@
             display: flex;
             flex: 1;
             position: relative;
+            width: 100%;
+        }
+
+        /* Ensure panels are flexible */
+        .main-panel {
+            flex: 1 1 60%;
+            min-width: 300px;
+            max-width: 75%;
+        }
+
+        .chat-panel {
+            flex: 0 0 350px;
+            min-width: 250px;
+            max-width: 500px;
         }
 
         .panel-resizer {
@@ -1173,19 +1187,23 @@ try {
         
         const deltaX = e.clientX - startX;
         const contentWrapper = document.querySelector('.content-wrapper');
-        const containerWidth = contentWrapper.getBoundingClientRect().width;
+        const containerWidth = contentWrapper.getBoundingClientRect().width - 5; // Account for resizer width
         
         const newMainWidth = startMainWidth + deltaX;
         const newChatWidth = startChatWidth - deltaX;
         
-        // Calculate percentages
-        const mainPercent = (newMainWidth / containerWidth) * 100;
-        const chatPercent = (newChatWidth / containerWidth) * 100;
+        // Set minimum and maximum widths in pixels
+        const minMainWidth = 300;
+        const maxMainWidth = containerWidth - 250; // Leave at least 250px for chat
+        const minChatWidth = 250;
+        const maxChatWidth = 500;
         
-        // Enforce constraints (main panel 40-75%, chat panel 25-60%)
-        if (mainPercent >= 40 && mainPercent <= 75 && chatPercent >= 25 && chatPercent <= 60) {
-            mainPanel.style.flex = `0 0 ${mainPercent}%`;
-            chatPanel.style.flex = `0 0 ${chatPercent}%`;
+        // Apply constraints
+        if (newMainWidth >= minMainWidth && newMainWidth <= maxMainWidth && 
+            newChatWidth >= minChatWidth && newChatWidth <= maxChatWidth) {
+            
+            mainPanel.style.flex = `0 0 ${newMainWidth}px`;
+            chatPanel.style.flex = `0 0 ${newChatWidth}px`;
         }
     }
 
