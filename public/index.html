@@ -835,15 +835,17 @@
     const chatPanel = document.querySelector('.chat-panel');
 
     // Upload triggers
-    landingUpload.addEventListener('click', () => {
+landingUpload.addEventListener('click', () => {
     // Landing page upload - no state reset needed
     fileInput.dataset.uploadType = 'initial';
+    fileInput.value = ''; // Reset to allow same file selection
     fileInput.click();
 });
 
 uploadNewBtn.addEventListener('click', () => {
     // Upload new document - needs state reset
     fileInput.dataset.uploadType = 'new';
+    fileInput.value = ''; // Reset to allow same file selection
     fileInput.click();
 });
 
@@ -888,6 +890,34 @@ fileInput.addEventListener('change', (e) => {
         handleFileUpload(newFile);
     }
 });
+
+// Handle click on file input to detect same file attempts
+fileInput.addEventListener('click', (e) => {
+    const uploadType = fileInput.dataset.uploadType || 'initial';
+    
+    // Only check for new document uploads
+    if (uploadType === 'new' && currentDocumentId && lastUploadedFile) {
+        // Store current file list to compare after selection
+        fileInput.dataset.wasEmpty = fileInput.files.length === 0;
+    }
+});
+
+// Handle focus to catch when user cancels file dialog with same file
+fileInput.addEventListener('focus', (e) => {
+    const uploadType = fileInput.dataset.uploadType || 'initial';
+    
+    if (uploadType === 'new' && currentDocumentId && lastUploadedFile && fileInput.dataset.wasEmpty === 'true') {
+        // Small delay to allow file dialog to process
+        setTimeout(() => {
+            // If still no files selected but we had a lastUploadedFile, user might have tried same file
+            if (fileInput.files.length === 0) {
+                // This means user opened dialog but didn't select anything
+                // We can't detect if they tried to select the same file, so do nothing
+            }
+        }, 100);
+    }
+});
+
 
 // Compare if two files are the same
 function isSameFile(file1, file2) {
