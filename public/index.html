@@ -834,14 +834,117 @@
     const chatPanel = document.querySelector('.chat-panel');
 
     // Upload triggers
-    landingUpload.addEventListener('click', () => fileInput.click());
-    uploadNewBtn.addEventListener('click', () => fileInput.click());
+    landingUpload.addEventListener('click', () => {
+    // Landing page upload - no state reset needed
+    fileInput.dataset.uploadType = 'initial';
+    fileInput.click();
+});
 
-    fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            handleFileUpload(e.target.files[0]);
+uploadNewBtn.addEventListener('click', () => {
+    // Upload new document - needs state reset
+    fileInput.dataset.uploadType = 'new';
+    fileInput.click();
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        const uploadType = fileInput.dataset.uploadType || 'initial';
+        
+        if (uploadType === 'new') {
+            // Reset state before uploading new document
+            resetApplicationState();
+        }
+        
+        handleFileUpload(e.target.files[0]);
+    }
+});
+
+// Reset application state for new document uploads
+function resetApplicationState() {
+    console.log('Resetting application state for new document...');
+    
+    // Clear current document
+    currentDocumentId = null;
+    
+    // Clear chat messages
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+        chatMessages.innerHTML = '';
+    }
+    
+    // Clear chat input
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.value = '';
+        chatInput.disabled = false;
+    }
+    
+    // Reset send button
+    const sendBtn = document.getElementById('sendBtn');
+    if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.textContent = '→';
+    }
+    
+    // Clear document content areas
+    const summaryGrid = document.getElementById('summaryGrid');
+    if (summaryGrid) {
+        summaryGrid.innerHTML = '';
+    }
+    
+    const redFlagsContainer = document.getElementById('redFlagsContainer');
+    if (redFlagsContainer) {
+        redFlagsContainer.innerHTML = '';
+    }
+    
+    const pdfViewer = document.getElementById('pdfViewer');
+    if (pdfViewer) {
+        pdfViewer.innerHTML = '';
+    }
+    
+    // Clear suggested questions
+    const suggestedQuestions = document.getElementById('suggestedQuestions');
+    if (suggestedQuestions) {
+        suggestedQuestions.innerHTML = '<div class="suggestions-title">See what experts usually ask:</div>';
+    }
+    
+    // Reset document header
+    const documentTitle = document.getElementById('documentTitle');
+    if (documentTitle) {
+        documentTitle.textContent = 'Contract Analysis';
+    }
+    
+    const docType = document.getElementById('docType');
+    if (docType) {
+        docType.textContent = 'Document Type';
+    }
+    
+    const riskBadge = document.getElementById('riskBadge');
+    if (riskBadge) {
+        riskBadge.textContent = 'Risk Level';
+        riskBadge.className = 'risk-badge';
+    }
+    
+    // Reset to summary tab
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.dataset.tab === 'summary') {
+            tab.classList.add('active');
         }
     });
+    
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.remove('active');
+        if (section.id === 'summary-content') {
+            section.classList.add('active');
+        }
+    });
+    
+    // Reset file input
+    fileInput.value = '';
+    
+    console.log('Application state reset complete');
+}
 
     // Sidebar toggle
     sidebarToggle.addEventListener('click', () => {
