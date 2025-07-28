@@ -1046,25 +1046,47 @@
 
     // Load suggested questions
     async function loadSuggestedQuestions() {
-        try {
-            const response = await fetch(`/suggestions/${currentDocumentId}`);
-            const result = await response.json();
+    try {
+        const response = await fetch(`/suggestions/${currentDocumentId}`);
+        const result = await response.json();
 
-            if (result.success) {
-                const container = document.getElementById('suggestedQuestions');
-                const questionsHtml = result.suggestions.map(question =>
-                    `<button class="suggestion-btn" onclick="askQuestion('${question.replace(/'/g, "\\\'")}')">${question}</button>`
-                ).join('');
-                
-                container.innerHTML = `
-                    <div class="suggestions-title">See what experts usually ask:</div>
-                    ${questionsHtml}
-                `;
-            }
-        } catch (error) {
-            console.error('Failed to load suggestions:', error);
+        if (result.success) {
+            const container = document.getElementById('suggestedQuestions');
+            
+            // Create buttons that call the global askQuestion function
+            const questionsHtml = result.suggestions.map((question, index) =>
+                `<button class="suggestion-btn" data-question="${question.replace(/"/g, '&quot;')}" onclick="window.askQuestion('${question.replace(/'/g, "\\'").replace(/"/g, '\\"')}')">${question}</button>`
+            ).join('');
+            
+            container.innerHTML = `
+                <div class="suggestions-title">See what experts usually ask:</div>
+                ${questionsHtml}
+            `;
+
+            // Also add click event listeners as backup
+            container.querySelectorAll('.suggestion-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const question = this.getAttribute('data-question');
+                    if (question && window.askQuestion) {
+                        window.askQuestion(question);
+                    }
+                });
+            });
         }
+    } catch (error) {
+        console.error('Failed to load suggestions:', error);
+        // Add fallback suggestions if API fails
+        const container = document.getElementById('suggestedQuestions');
+        container.innerHTML = `
+            <div class="suggestions-title">See what experts usually ask:</div>
+            <button class="suggestion-btn" onclick="window.askQuestion('What are the most important terms I should know?')">What are the most important terms I should know?</button>
+            <button class="suggestion-btn" onclick="window.askQuestion('Are there any red flags in this contract?')">Are there any red flags in this contract?</button>
+            <button class="suggestion-btn" onclick="window.askQuestion('What are my main obligations?')">What are my main obligations?</button>
+            <button class="suggestion-btn" onclick="window.askQuestion('What happens if I want to cancel?')">What happens if I want to cancel?</button>
+        `;
     }
+}
 
     // Ask suggested question - Make this globally available
     window.askQuestion = function(question) {
@@ -1075,13 +1097,18 @@
     // Send chat message
     async function sendMessage() {
     const message = chatInput.value.trim();
-    if (!message || !currentDocumentId) return;
+    if (!message || !currentDocumentId) {
+        console.log('No message or document ID');
+        return;
+    }
 
     // Prevent multiple simultaneous requests
     if (chatInput.disabled) {
-        console.log('Chat request already in progress, ignoring...');
+        console.log('Chat request already in progress');
         return;
     }
+
+    console.log('Sending message:', message);
 
     // Add user message
     addMessage(message, 'user');
@@ -1096,65 +1123,91 @@
     const typingIndicator = addTypingIndicator();
 
     try {
+        console.log('Making fetch request to /chat');
+        
         const response = await fetch('/chat', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
             body: JSON.stringify({
                 documentId: currentDocumentId,
                 message: message
             })
         });
 
+        console.log('Response status:', response.status);
+        
         // Remove typing indicator
-        if (typingIndicator) {
+        if (typingIndicator && typingIndicator.parentNode) {
             typingIndicator.remove();
+        }
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
         const result = await response.json();
+        console.log('Response result:', result);
 
-        if (response.ok && result.success) {
+        if (result.success && result.response) {
             addMessage(result.response, 'ai');
         } else {
-            // Handle specific error cases
+            // Handle API errors
+            const errorMsg = result.error || 'No response from AI';
+            console.error('API Error:', errorMsg);
+            
             if (response.status === 429) {
-                // Rate limit error
                 const retryAfter = result.retryAfter || 60;
-                addMessage(`⏰ Please wait ${retryAfter} seconds before sending another message. Our AI needs a moment to catch up!`, 'ai error');
-                
-                // Start countdown timer
+                addMessage(`⏰ Please wait ${retryAfter} seconds before sending another message.`, 'ai error');
                 startCooldownTimer(retryAfter);
             } else {
-                throw new Error(result.error || `Server error: ${response.status}`);
+                addMessage(`API Error: ${errorMsg}`, 'ai error');
             }
         }
     } catch (error) {
-        console.error('Chat error:', error);
+        console.error('Chat error details:', error);
         
         // Remove typing indicator if still there
-        if (typingIndicator) {
+        if (typingIndicator && typingIndicator.parentNode) {
             typingIndicator.remove();
         }
 
-        // Enhanced error messages based on error type
+        // Enhanced error messages
         let errorMessage = 'Sorry, I encountered an error. Please try again.';
         
-        if (error.message.includes('Failed to fetch')) {
+        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
             errorMessage = '🔌 Connection issue. Please check your internet and try again.';
-        } else if (error.message.includes('429')) {
+        } else if (error.message.includes('429') || error.message.includes('rate limit')) {
             errorMessage = '⏰ Too many requests. Please wait a moment before trying again.';
-        } else if (error.message.includes('rate limit')) {
-            errorMessage = '🐌 Please slow down - wait a few seconds between messages.';
+            startCooldownTimer(60);
+        } else if (error.message.includes('404')) {
+            errorMessage = '📄 Document not found. Please upload a new document.';
+        } else if (error.message.includes('500')) {
+            errorMessage = '🔧 Server error. Please try again in a moment.';
         }
         
         addMessage(errorMessage, 'ai error');
     } finally {
-        // Always restore input functionality after a delay
+        // Always restore input functionality
         setTimeout(() => {
             chatInput.disabled = false;
             sendBtn.disabled = false;
             sendBtn.textContent = '→';
             chatInput.focus();
-        }, 1000); // 1 second delay to prevent rapid fire
+        }, 1000);
+    }
+}
+
+// Make sure askQuestion is globally available
+window.askQuestion = function(question) {
+    console.log('askQuestion called with:', question);
+    if (chatInput && question) {
+        chatInput.value = question;
+        sendMessage();
+    } else {
+        console.error('Chat input not found or no question provided');
     }
 }
 
