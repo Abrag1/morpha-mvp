@@ -161,6 +161,27 @@
             position: relative;
             transition: background 0.2s ease;
             flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .panel-resizer:hover {
+            background: #667eea;
+        }
+
+        .panel-resizer::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 1px;
+        }
+
+        .panel-resizer:hover::after {
+            background: white;
         }
 
         .panel-resizer:hover {
@@ -763,14 +784,6 @@
         <span class="category-name">Brand Partnerships</span>
         <span class="category-count">0</span>
     </div>
-    <div class="category-item" data-category="Service Agreement">
-        <span class="category-name">Service Agreements</span>
-        <span class="category-count">0</span>
-    </div>
-    <div class="category-item" data-category="Purchase Agreement">
-        <span class="category-name">Purchase Agreements</span>
-        <span class="category-count">0</span>
-    </div>
     <div class="category-item" data-category="Loan Document">
         <span class="category-name">Loan Documents</span>
         <span class="category-count">0</span>
@@ -838,6 +851,8 @@
                 </div>
             </div>
 
+           <!-- Panel Resizer -->
+            <div class="panel-resizer" id="panelResizer"></div>
             <!-- Chat Panel -->
             <div class="chat-panel">
                 <div class="chat-header">
@@ -1130,7 +1145,7 @@ try {
 
     // Panel resizing functionality
     let startX, startMainWidth, startChatWidth;
-    const panelResizer = document.querySelector('.panel-resizer');
+    const panelResizer = document.getElementById('panelResizer');
 
     if (panelResizer) {
         panelResizer.addEventListener('mousedown', (e) => {
@@ -1167,8 +1182,8 @@ try {
         const mainPercent = (newMainWidth / containerWidth) * 100;
         const chatPercent = (newChatWidth / containerWidth) * 100;
         
-        // Enforce constraints
-        if (mainPercent >= 30 && mainPercent <= 75 && chatPercent >= 25 && chatPercent <= 70) {
+        // Enforce constraints (main panel 40-75%, chat panel 25-60%)
+        if (mainPercent >= 40 && mainPercent <= 75 && chatPercent >= 25 && chatPercent <= 60) {
             mainPanel.style.flex = `0 0 ${mainPercent}%`;
             chatPanel.style.flex = `0 0 ${chatPercent}%`;
         }
