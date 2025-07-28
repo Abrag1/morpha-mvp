@@ -1157,21 +1157,29 @@ try {
         });
     });
 
-    // Panel resizing functionality
+    // Panel resizing functionality with debugging
     let startX, startMainWidth, startChatWidth;
     const panelResizer = document.getElementById('panelResizer');
 
+    console.log('Panel resizer element:', panelResizer);
+    console.log('Main panel:', mainPanel);
+    console.log('Chat panel:', chatPanel);
+
     if (panelResizer) {
+        console.log('Panel resizer found, adding event listener');
+        
         panelResizer.addEventListener('mousedown', (e) => {
+            console.log('Mouse down on resizer');
             isResizing = true;
             startX = e.clientX;
             
-            const contentWrapper = document.querySelector('.content-wrapper');
             const mainRect = mainPanel.getBoundingClientRect();
             const chatRect = chatPanel.getBoundingClientRect();
             
             startMainWidth = mainRect.width;
             startChatWidth = chatRect.width;
+            
+            console.log('Start widths - Main:', startMainWidth, 'Chat:', startChatWidth);
             
             document.addEventListener('mousemove', handleMouseMove);
             document.addEventListener('mouseup', handleMouseUp);
@@ -1180,34 +1188,33 @@ try {
             
             e.preventDefault();
         });
+    } else {
+        console.error('Panel resizer not found!');
     }
 
     function handleMouseMove(e) {
         if (!isResizing) return;
         
         const deltaX = e.clientX - startX;
-        const contentWrapper = document.querySelector('.content-wrapper');
-        const containerWidth = contentWrapper.getBoundingClientRect().width - 5; // Account for resizer width
+        console.log('Mouse move, deltaX:', deltaX);
         
         const newMainWidth = startMainWidth + deltaX;
         const newChatWidth = startChatWidth - deltaX;
         
-        // Set minimum and maximum widths in pixels
-        const minMainWidth = 300;
-        const maxMainWidth = containerWidth - 250; // Leave at least 250px for chat
-        const minChatWidth = 250;
-        const maxChatWidth = 500;
+        console.log('New widths - Main:', newMainWidth, 'Chat:', newChatWidth);
         
-        // Apply constraints
-        if (newMainWidth >= minMainWidth && newMainWidth <= maxMainWidth && 
-            newChatWidth >= minChatWidth && newChatWidth <= maxChatWidth) {
-            
-            mainPanel.style.flex = `0 0 ${newMainWidth}px`;
-            chatPanel.style.flex = `0 0 ${newChatWidth}px`;
+        // Simplified constraints
+        if (newMainWidth >= 300 && newChatWidth >= 250) {
+            mainPanel.style.width = newMainWidth + 'px';
+            chatPanel.style.width = newChatWidth + 'px';
+            console.log('Applied new widths');
+        } else {
+            console.log('Constraints not met');
         }
     }
 
     function handleMouseUp() {
+        console.log('Mouse up - stopping resize');
         isResizing = false;
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
