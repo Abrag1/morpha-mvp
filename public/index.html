@@ -750,32 +750,40 @@
                 <button class="sidebar-toggle" id="sidebarToggle">☰</button>
                 
                 <div class="sidebar-section">
-                    <div class="sidebar-title">Document Categories</div>
-                    <div class="category-item active">
-                        <span class="category-name">Leasing Agreements</span>
-                        <span class="category-count">1</span>
-                    </div>
-                    <div class="category-item">
-                        <span class="category-name">Auto Contracts</span>
-                        <span class="category-count">0</span>
-                    </div>
-                    <div class="category-item">
-                        <span class="category-name">Loans & Credit Cards</span>
-                        <span class="category-count">0</span>
-                    </div>
-                    <div class="category-item">
-                        <span class="category-name">Employment Contracts</span>
-                        <span class="category-count">0</span>
-                    </div>
-                    <div class="category-item">
-                        <span class="category-name">Freelance / Vendor</span>
-                        <span class="category-count">0</span>
-                    </div>
-                    <div class="category-item">
-                        <span class="category-name">Other</span>
-                        <span class="category-count">0</span>
-                    </div>
-                </div>
+    <div class="sidebar-title">Document Categories</div>
+    <div class="category-item" data-category="Rental/Lease Agreement">
+        <span class="category-name">Rental/Lease Agreements</span>
+        <span class="category-count">0</span>
+    </div>
+    <div class="category-item" data-category="Employment Contract">
+        <span class="category-name">Employment Contracts</span>
+        <span class="category-count">0</span>
+    </div>
+    <div class="category-item" data-category="Brand Partnership/Sponsorship">
+        <span class="category-name">Brand Partnerships</span>
+        <span class="category-count">0</span>
+    </div>
+    <div class="category-item" data-category="Service Agreement">
+        <span class="category-name">Service Agreements</span>
+        <span class="category-count">0</span>
+    </div>
+    <div class="category-item" data-category="Purchase Agreement">
+        <span class="category-name">Purchase Agreements</span>
+        <span class="category-count">0</span>
+    </div>
+    <div class="category-item" data-category="Loan Document">
+        <span class="category-name">Loan Documents</span>
+        <span class="category-count">0</span>
+    </div>
+    <div class="category-item" data-category="NDA/Confidentiality">
+        <span class="category-name">NDAs/Confidentiality</span>
+        <span class="category-count">0</span>
+    </div>
+    <div class="category-item" data-category="Other">
+        <span class="category-name">Other</span>
+        <span class="category-count">0</span>
+    </div>
+</div>
 
                 <button class="upload-btn" id="uploadNewBtn">Upload New Document</button>
             </div>
@@ -1245,7 +1253,8 @@ if (document.getElementById('chatMessages')) {
         // Update document header
         document.getElementById('documentTitle').textContent = filename;
         document.getElementById('docType').textContent = analysis.documentType;
-        
+        updateCategoryCount(analysis.documentType);        
+
         const riskBadge = document.getElementById('riskBadge');
         riskBadge.textContent = `${analysis.riskLevel} Risk`;
         riskBadge.className = `risk-badge risk-${analysis.riskLevel}`;
@@ -1305,6 +1314,37 @@ if (document.getElementById('chatMessages')) {
         // Load PDF viewer
         loadPDFViewer();
     }
+
+    // Update sidebar category counts
+function updateCategoryCount(documentType) {
+    console.log('Updating category count for:', documentType);
+    
+    // Reset all counts first
+    document.querySelectorAll('.category-count').forEach(count => {
+        count.textContent = '0';
+    });
+    
+    // Remove active class from all categories
+    document.querySelectorAll('.category-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    // Find and update the matching category
+    const categoryItems = document.querySelectorAll('.category-item');
+    categoryItems.forEach(item => {
+        const categoryData = item.getAttribute('data-category');
+        if (categoryData === documentType) {
+            // Set count to 1 for current document
+            const countElement = item.querySelector('.category-count');
+            if (countElement) {
+                countElement.textContent = '1';
+            }
+            // Add active class
+            item.classList.add('active');
+            console.log('Updated count for category:', categoryData);
+        }
+    });
+}
 
     // Load suggested questions
     async function loadSuggestedQuestions() {
