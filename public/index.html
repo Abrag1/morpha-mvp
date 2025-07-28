@@ -755,59 +755,62 @@
     </div>
 
     <script>
-        let currentDocumentId = null;
-        let isCollapsed = false;
-        let isResizing = false;
+        document.addEventListener('DOMContentLoaded', function() {
+    let currentDocumentId = null;
+    let isCollapsed = false;
+    let isResizing = false;
 
-        // DOM elements
-        const landingPage = document.getElementById('landingPage');
-        const mainApp = document.getElementById('mainApp');
-        const landingUpload = document.getElementById('landingUpload');
-        const fileInput = document.getElementById('fileInput');
-        const uploadNewBtn = document.getElementById('uploadNewBtn');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebar = document.getElementById('sidebar');
-        const loadingSection = document.getElementById('loadingSection');
-        const documentContent = document.getElementById('documentContent');
-        const chatInput = document.getElementById('chatInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const chatMessages = document.getElementById('chatMessages');
-        const panelResizer = document.getElementById('panelResizer');
-        const mainPanel = document.getElementById('mainPanel');
-        const chatPanel = document.getElementById('chatPanel');
+    // DOM elements - now safely accessible after DOM is loaded
+    const landingPage = document.getElementById('landingPage');
+    const mainApp = document.getElementById('mainApp');
+    const landingUpload = document.getElementById('landingUpload');
+    const fileInput = document.getElementById('fileInput');
+    const uploadNewBtn = document.getElementById('uploadNewBtn');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebar = document.getElementById('sidebar');
+    const loadingSection = document.getElementById('loadingSection');
+    const documentContent = document.getElementById('documentContent');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatMessages = document.getElementById('chatMessages');
+    const mainPanel = document.querySelector('.main-panel');
+    const chatPanel = document.querySelector('.chat-panel');
 
-        // Upload triggers
-        landingUpload.addEventListener('click', () => fileInput.click());
-        uploadNewBtn.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length > 0) {
-                handleFileUpload(e.target.files[0]);
-            }
+    // Upload triggers
+    landingUpload.addEventListener('click', () => fileInput.click());
+    uploadNewBtn.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileUpload(e.target.files[0]);
+        }
+    });
+
+    // Sidebar toggle
+    sidebarToggle.addEventListener('click', () => {
+        isCollapsed = !isCollapsed;
+        sidebar.classList.toggle('collapsed', isCollapsed);
+        sidebarToggle.textContent = isCollapsed ? '→' : '☰';
+    });
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            // Remove active class from all tabs and content
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content-section').forEach(c => c.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding content
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.tab + '-content').classList.add('active');
         });
+    });
 
-        // Sidebar toggle
-        sidebarToggle.addEventListener('click', () => {
-            isCollapsed = !isCollapsed;
-            sidebar.classList.toggle('collapsed', isCollapsed);
-            sidebarToggle.textContent = isCollapsed ? '→' : '☰';
-        });
+    // Panel resizing functionality
+    let startX, startMainWidth, startChatWidth;
+    const panelResizer = document.querySelector('.panel-resizer');
 
-        // Tab switching
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                // Remove active class from all tabs and content
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.content-section').forEach(c => c.classList.remove('active'));
-                
-                // Add active class to clicked tab and corresponding content
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab + '-content').classList.add('active');
-            });
-        });
-
-        // Panel resizing functionality
-        let startX, startMainWidth, startChatWidth;
-
+    if (panelResizer) {
         panelResizer.addEventListener('mousedown', (e) => {
             isResizing = true;
             startX = e.clientX;
@@ -815,7 +818,6 @@
             const contentWrapper = document.querySelector('.content-wrapper');
             const mainRect = mainPanel.getBoundingClientRect();
             const chatRect = chatPanel.getBoundingClientRect();
-            const containerRect = contentWrapper.getBoundingClientRect();
             
             startMainWidth = mainRect.width;
             startChatWidth = chatRect.width;
@@ -827,255 +829,258 @@
             
             e.preventDefault();
         });
+    }
 
-        function handleMouseMove(e) {
-            if (!isResizing) return;
-            
-            const deltaX = e.clientX - startX;
-            const contentWrapper = document.querySelector('.content-wrapper');
-            const containerWidth = contentWrapper.getBoundingClientRect().width;
-            
-            const newMainWidth = startMainWidth + deltaX;
-            const newChatWidth = startChatWidth - deltaX;
-            
-            // Calculate percentages
-            const mainPercent = (newMainWidth / containerWidth) * 100;
-            const chatPercent = (newChatWidth / containerWidth) * 100;
-            
-            // Enforce constraints
-            if (mainPercent >= 30 && mainPercent <= 75 && chatPercent >= 25 && chatPercent <= 70) {
-                mainPanel.style.flex = `0 0 ${mainPercent}%`;
-                chatPanel.style.flex = `0 0 ${chatPercent}%`;
-            }
+    function handleMouseMove(e) {
+        if (!isResizing) return;
+        
+        const deltaX = e.clientX - startX;
+        const contentWrapper = document.querySelector('.content-wrapper');
+        const containerWidth = contentWrapper.getBoundingClientRect().width;
+        
+        const newMainWidth = startMainWidth + deltaX;
+        const newChatWidth = startChatWidth - deltaX;
+        
+        // Calculate percentages
+        const mainPercent = (newMainWidth / containerWidth) * 100;
+        const chatPercent = (newChatWidth / containerWidth) * 100;
+        
+        // Enforce constraints
+        if (mainPercent >= 30 && mainPercent <= 75 && chatPercent >= 25 && chatPercent <= 70) {
+            mainPanel.style.flex = `0 0 ${mainPercent}%`;
+            chatPanel.style.flex = `0 0 ${chatPercent}%`;
         }
+    }
 
-        function handleMouseUp() {
-            isResizing = false;
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-        }
+    function handleMouseUp() {
+        isResizing = false;
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+    }
 
-        // Chat functionality
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-        sendBtn.addEventListener('click', sendMessage);
-
-        // File upload handler
-        async function handleFileUpload(file) {
-            // Validate file
-            const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-            if (!allowedTypes.includes(file.type)) {
-                alert('Please upload a PDF or Word document.');
-                return;
-            }
-
-            if (file.size > 10 * 1024 * 1024) {
-                alert('File size must be less than 10MB.');
-                return;
-            }
-
-            // Switch to main app and show loading
-            landingPage.style.display = 'none';
-            mainApp.style.display = 'block';
-            loadingSection.classList.remove('hidden');
-            documentContent.classList.add('hidden');
-
-            // Upload file
-            const formData = new FormData();
-            formData.append('document', file);
-
-            try {
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    currentDocumentId = result.documentId;
-                    displayAnalysis(result.analysis, file.name);
-                    loadSuggestedQuestions();
-                    
-                    // Hide loading and show content
-                    loadingSection.classList.add('hidden');
-                    documentContent.classList.remove('hidden');
-                } else {
-                    throw new Error(result.error || 'Upload failed');
-                }
-            } catch (error) {
-                console.error('Upload error:', error);
-                alert('Failed to upload and analyze document: ' + error.message);
-                // Go back to landing page
-                landingPage.style.display = 'flex';
-                mainApp.style.display = 'none';
-            }
-        }
-
-        // Display analysis results
-        function displayAnalysis(analysis, filename) {
-            // Update document header
-            document.getElementById('documentTitle').textContent = filename;
-            document.getElementById('docType').textContent = analysis.documentType;
-            
-            const riskBadge = document.getElementById('riskBadge');
-            riskBadge.textContent = `${analysis.riskLevel} Risk`;
-            riskBadge.className = `risk-badge risk-${analysis.riskLevel}`;
-
-            // Update summary
-            const summaryGrid = document.getElementById('summaryGrid');
-            let summaryHtml = `
-                <div class="summary-card">
-                    <h4>📄 Document Summary</h4>
-                    <p>${analysis.summary}</p>
-                    ${analysis.isScanned ? '<p><em>Note: This appears to be a scanned document. Some features may be limited.</em></p>' : ''}
-                </div>
-            `;
-            
-            if (analysis.keyDates && analysis.keyDates.length > 0) {
-                summaryHtml += `
-                    <div class="summary-card">
-                        <h4>📅 Important Dates</h4>
-                        <ul>
-                            ${analysis.keyDates.map(date => `<li>${date}</li>`).join('')}
-                        </ul>
-                    </div>
-                `;
-            }
-            
-            if (analysis.financialTerms && analysis.financialTerms.length > 0) {
-                summaryHtml += `
-                    <div class="summary-card">
-                        <h4>💰 Financial Terms</h4>
-                        <ul>
-                            ${analysis.financialTerms.map(term => `<li>${term}</li>`).join('')}
-                        </ul>
-                    </div>
-                `;
-            }
-            
-            summaryGrid.innerHTML = summaryHtml;
-
-            // Update red flags
-            const redFlagsContainer = document.getElementById('redFlagsContainer');
-            if (analysis.risks && analysis.risks.length > 0) {
-                redFlagsContainer.innerHTML = analysis.risks.map(risk => `
-                    <div class="flag-item">
-                        <div class="flag-title">⚠️ Potential Issue</div>
-                        <div class="flag-description">${risk}</div>
-                    </div>
-                `).join('');
-            } else {
-                redFlagsContainer.innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #666;">
-                        <h3>✅ No major red flags detected</h3>
-                        <p>This document appears to have standard terms and conditions.</p>
-                    </div>
-                `;
-            }
-
-            // Load PDF viewer
-            loadPDFViewer();
-        }
-
-        // Load suggested questions
-        async function loadSuggestedQuestions() {
-            try {
-                const response = await fetch(`/suggestions/${currentDocumentId}`);
-                const result = await response.json();
-
-                if (result.success) {
-                    const container = document.getElementById('suggestedQuestions');
-                    const questionsHtml = result.suggestions.map(question => 
-                        `<button class="suggestion-btn" onclick="askQuestion('${question.replace(/'/g, "\\'")}')">${question}</button>`
-                    ).join('');
-                    
-                    container.innerHTML = `
-                        <div class="suggestions-title">See what experts usually ask:</div>
-                        ${questionsHtml}
-                    `;
-                }
-            } catch (error) {
-                console.error('Failed to load suggestions:', error);
-            }
-        }
-
-        // Ask suggested question
-        function askQuestion(question) {
-            chatInput.value = question;
+    // Chat functionality - THIS IS THE KEY FIX!
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
             sendMessage();
         }
+    });
 
-        // Send chat message
-        async function sendMessage() {
-            const message = chatInput.value.trim();
-            if (!message || !currentDocumentId) return;
+    sendBtn.addEventListener('click', sendMessage);
 
-            // Add user message
-            addMessage(message, 'user');
-            chatInput.value = '';
-
-            // Disable input
-            chatInput.disabled = true;
-            sendBtn.disabled = true;
-
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        documentId: currentDocumentId,
-                        message: message
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    addMessage(result.response, 'ai');
-                } else {
-                    throw new Error(result.error || 'Chat failed');
-                }
-            } catch (error) {
-                console.error('Chat error:', error);
-                addMessage('Sorry, I encountered an error. Please try again.', 'ai');
-            } finally {
-                chatInput.disabled = false;
-                sendBtn.disabled = false;
-                chatInput.focus();
-            }
+    // File upload handler
+    async function handleFileUpload(file) {
+        // Validate file
+        const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+        if (!allowedTypes.includes(file.type)) {
+            alert('Please upload a PDF or Word document.');
+            return;
         }
 
-        // Add message to chat
-        function addMessage(content, sender) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}`;
-            messageDiv.innerHTML = `<div class="message-content">${content}</div>`;
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File size must be less than 10MB.');
+            return;
+        }
+
+        // Switch to main app and show loading
+        landingPage.style.display = 'none';
+        mainApp.style.display = 'block';
+        loadingSection.classList.remove('hidden');
+        documentContent.classList.add('hidden');
+
+        // Upload file
+        const formData = new FormData();
+        formData.append('document', file);
+
+        try {
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                currentDocumentId = result.documentId;
+                displayAnalysis(result.analysis, file.name);
+                loadSuggestedQuestions();
+                
+                // Hide loading and show content
+                loadingSection.classList.add('hidden');
+                documentContent.classList.remove('hidden');
+            } else {
+                throw new Error(result.error || 'Upload failed');
+            }
+        } catch (error) {
+            console.error('Upload error:', error);
+            alert('Failed to upload and analyze document: ' + error.message);
+            // Go back to landing page
+            landingPage.style.display = 'flex';
+            mainApp.style.display = 'none';
+        }
+    }
+
+    // Display analysis results
+    function displayAnalysis(analysis, filename) {
+        // Update document header
+        document.getElementById('documentTitle').textContent = filename;
+        document.getElementById('docType').textContent = analysis.documentType;
+        
+        const riskBadge = document.getElementById('riskBadge');
+        riskBadge.textContent = `${analysis.riskLevel} Risk`;
+        riskBadge.className = `risk-badge risk-${analysis.riskLevel}`;
+
+        // Update summary
+        const summaryGrid = document.getElementById('summaryGrid');
+        let summaryHtml = `
+            <div class="summary-card">
+                <h4>📄 Document Summary</h4>
+                <p>${analysis.summary}</p>
+                ${analysis.isScanned ? '<p><em>Note: This appears to be a scanned document. Some features may be limited.</em></p>' : ''}
+            </div>
+        `;
+        
+        if (analysis.keyDates && analysis.keyDates.length > 0) {
+            summaryHtml += `
+                <div class="summary-card">
+                    <h4>📅 Important Dates</h4>
+                    <ul>
+                        ${analysis.keyDates.map(date => `<li>${date}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+        
+        if (analysis.financialTerms && analysis.financialTerms.length > 0) {
+            summaryHtml += `
+                <div class="summary-card">
+                    <h4>💰 Financial Terms</h4>
+                    <ul>
+                        ${analysis.financialTerms.map(term => `<li>${term}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+        
+        summaryGrid.innerHTML = summaryHtml;
+
+        // Update red flags
+        const redFlagsContainer = document.getElementById('redFlagsContainer');
+        if (analysis.risks && analysis.risks.length > 0) {
+            redFlagsContainer.innerHTML = analysis.risks.map(risk => `
+                <div class="flag-item">
+                    <div class="flag-title">⚠️ Potential Issue</div>
+                    <div class="flag-description">${risk}</div>
+                </div>
+            `).join('');
+        } else {
+            redFlagsContainer.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #666;">
+                    <h3>✅ No major red flags detected</h3>
+                    <p>This document appears to have standard terms and conditions.</p>
+                </div>
+            `;
         }
 
         // Load PDF viewer
-        function loadPDFViewer() {
-            if (!currentDocumentId) return;
-            
-            const pdfViewer = document.getElementById('pdfViewer');
-            pdfViewer.innerHTML = `
-                <iframe 
-                    src="/pdf/${currentDocumentId}" 
-                    width="100%" 
-                    height="100%" 
-                    style="border: none; border-radius: 8px;">
-                    <p>Your browser doesn't support PDF viewing. 
-                    <a href="/pdf/${currentDocumentId}" target="_blank">Click here to view the PDF</a></p>
-                </iframe>
-            `;
+        loadPDFViewer();
+    }
+
+    // Load suggested questions
+    async function loadSuggestedQuestions() {
+        try {
+            const response = await fetch(`/suggestions/${currentDocumentId}`);
+            const result = await response.json();
+
+            if (result.success) {
+                const container = document.getElementById('suggestedQuestions');
+                const questionsHtml = result.suggestions.map(question =>
+                    `<button class="suggestion-btn" onclick="askQuestion('${question.replace(/'/g, "\\\'")}')">${question}</button>`
+                ).join('');
+                
+                container.innerHTML = `
+                    <div class="suggestions-title">See what experts usually ask:</div>
+                    ${questionsHtml}
+                `;
+            }
+        } catch (error) {
+            console.error('Failed to load suggestions:', error);
         }
+    }
+
+    // Ask suggested question - Make this globally available
+    window.askQuestion = function(question) {
+        chatInput.value = question;
+        sendMessage();
+    }
+
+    // Send chat message
+    async function sendMessage() {
+        const message = chatInput.value.trim();
+        if (!message || !currentDocumentId) return;
+
+        // Add user message
+        addMessage(message, 'user');
+        chatInput.value = '';
+
+        // Disable input
+        chatInput.disabled = true;
+        sendBtn.disabled = true;
+
+        try {
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    documentId: currentDocumentId,
+                    message: message
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                addMessage(result.response, 'ai');
+            } else {
+                throw new Error(result.error || 'Chat failed');
+            }
+        } catch (error) {
+            console.error('Chat error:', error);
+            addMessage('Sorry, I encountered an error. Please try again.', 'ai');
+        } finally {
+            chatInput.disabled = false;
+            sendBtn.disabled = false;
+            chatInput.focus();
+        }
+    }
+
+    // Add message to chat
+    function addMessage(content, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}`;
+        messageDiv.innerHTML = `<div class="message-content">${content}</div>`;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // Load PDF viewer
+    function loadPDFViewer() {
+        if (!currentDocumentId) return;
+        
+        const pdfViewer = document.getElementById('pdfViewer');
+        pdfViewer.innerHTML = `
+            <iframe
+                src="/pdf/${currentDocumentId}"
+                width="100%"
+                height="100%"
+                style="border: none; border-radius: 8px;">
+                <p>Your browser doesn't support PDF viewing.
+                <a href="/pdf/${currentDocumentId}" target="_blank">Click here to view the PDF</a></p>
+            </iframe>
+        `;
+    }
+});
     </script>
 </body>
 </html>
