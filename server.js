@@ -285,7 +285,50 @@ app.post('/upload', uploadLimiter, upload.single('document'), async (req, res) =
 
         // Enhanced analysis prompt with token estimation
 const analysisPrompt = `
-;
+You are a legal contract expert analyzing a document. Analyze the provided text and classify it into one of these specific categories:
+
+DOCUMENT TYPES TO CHOOSE FROM:
+1. "Rental/Lease Agreement" - Residential or commercial property rental, lease agreements, tenancy contracts
+2. "Employment Contract" - Job offers, employment agreements, work contracts, salary agreements
+3. "Brand Partnership/Sponsorship" - Influencer deals, sponsored content, brand ambassador agreements, marketing partnerships
+4. "Service Agreement" - Freelance contracts, consulting agreements, professional services, contractor agreements
+5. "Purchase Agreement" - Real estate purchases, vehicle sales, major purchases, sales contracts
+6. "Loan Document" - Personal loans, mortgages, credit agreements, financing contracts
+7. "NDA/Confidentiality" - Non-disclosure agreements, confidentiality contracts, privacy agreements
+8. "Other" - Any contract that doesn't clearly fit the above categories
+
+CLASSIFICATION KEYWORDS TO LOOK FOR:
+- Rental/Lease: "tenant", "landlord", "rent", "lease term", "premises", "property", "occupancy"
+- Employment: "employee", "employer", "salary", "wages", "position", "job title", "benefits", "termination"
+- Brand Partnership: "influencer", "sponsor", "brand", "content creation", "social media", "promotion", "campaign", "deliverables"
+- Service Agreement: "contractor", "freelancer", "consultant", "services", "scope of work", "project", "independent contractor"
+- Purchase: "buyer", "seller", "purchase price", "sale", "transfer of ownership", "closing"
+- Loan: "borrower", "lender", "principal", "interest rate", "loan amount", "repayment", "mortgage"
+- NDA: "confidential", "non-disclosure", "proprietary", "trade secrets", "confidentiality"
+
+INSTRUCTIONS:
+1. Read the document text carefully
+2. Look for the keywords and language patterns above
+3. Choose the MOST APPROPRIATE category from the 7 types listed
+4. If the text extraction is incomplete due to scanning, make your best classification based on available text
+5. If truly unclear, use "Other" but provide reasoning
+
+Available text from document:
+${extractedText.substring(0, 6000)}
+
+Provide analysis in JSON format:
+{
+    "documentType": "EXACT category name from list above",
+    "summary": "string (include note if scanned/limited text)",
+    "risks": ["array of risk strings - include common risks for this document type"],
+    "keyDates": ["array of important dates if found"],
+    "financialTerms": ["array of financial terms if found"],
+    "riskLevel": "low|medium|high",
+    "isScanned": boolean (true if appears to be scanned with limited text),
+    "classificationConfidence": "high|medium|low",
+    "classificationReason": "Brief explanation of why this classification was chosen"
+}
+`;
 
         const analysis = await openai.chat.completions.create({
             model: "gpt-4",
