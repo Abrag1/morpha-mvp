@@ -1166,15 +1166,71 @@ function addMessage(content, sender) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-    // Add message to chat
-    function addMessage(content, sender) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${sender}`;
-        messageDiv.innerHTML = `<div class="message-content">${content}</div>`;
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
+// Add typing indicator function
+function addTypingIndicator() {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message ai typing-indicator';
+    messageDiv.innerHTML = `
+        <div class="message-content">
+            <div class="typing-animation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    `;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return messageDiv;
+}
 
+// Cooldown timer for rate limiting
+function startCooldownTimer(seconds) {
+    const timerDisplay = document.createElement('div');
+    timerDisplay.className = 'cooldown-timer';
+    timerDisplay.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #ff6b6b;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    
+    document.body.appendChild(timerDisplay);
+    
+    let remaining = seconds;
+    const countdown = setInterval(() => {
+        timerDisplay.textContent = `Wait ${remaining}s before next message`;
+        remaining--;
+        
+        if (remaining < 0) {
+            clearInterval(countdown);
+            timerDisplay.remove();
+        }
+    }, 1000);
+}
+
+    // Add message to chat
+    // Enhanced addMessage function with error styling
+function addMessage(content, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${sender}`;
+    
+    // Special styling for error messages
+    let messageClass = 'message-content';
+    if (sender.includes('error')) {
+        messageClass += ' error-message';
+    }
+    
+    messageDiv.innerHTML = `<div class="${messageClass}">${content}</div>`;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
     // Load PDF viewer
     function loadPDFViewer() {
         if (!currentDocumentId) return;
