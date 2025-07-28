@@ -1017,43 +1017,154 @@
 
     // Send chat message
     async function sendMessage() {
-        const message = chatInput.value.trim();
-        if (!message || !currentDocumentId) return;
+    const message = chatInput.value.trim();
+    if (!message || !currentDocumentId) return;
 
-        // Add user message
-        addMessage(message, 'user');
-        chatInput.value = '';
+    // Prevent multiple simultaneous requests
+    if (chatInput.disabled) {
+        console.log('Chat request already in progress, ignoring...');
+        return;
+    }
 
-        // Disable input
-        chatInput.disabled = true;
-        sendBtn.disabled = true;
+    // Add user message
+    addMessage(message, 'user');
+    chatInput.value = '';
 
-        try {
-            const response = await fetch('/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    documentId: currentDocumentId,
-                    message: message
-                })
-            });
+    // Disable input with visual feedback
+    chatInput.disabled = true;
+    sendBtn.disabled = true;
+    sendBtn.textContent = '...';
 
-            const result = await response.json();
+    // Add "AI is typing" indicator
+    const typingIndicator = addTypingIndicator();
 
-            if (result.success) {
-                addMessage(result.response, 'ai');
+    try {
+        const response = await fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                documentId: currentDocumentId,
+                message: message
+            })
+        });
+
+        // Remove typing indicator
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+            addMessage(result.response, 'ai');
+        } else {
+            // Handle specific error cases
+            if (response.status === 429) {
+                // Rate limit error
+                const retryAfter = result.retryAfter || 60;
+                addMessage(`⏰ Please wait ${retryAfter} seconds before sending another message. Our AI needs a moment to catch up!`, 'ai error');
+                
+                // Start countdown timer
+                startCooldownTimer(retryAfter);
             } else {
-                throw new Error(result.error || 'Chat failed');
+                throw new Error(result.error || `Server error: ${response.status}`);
             }
-        } catch (error) {
-            console.error('Chat error:', error);
-            addMessage('Sorry, I encountered an error. Please try again.', 'ai');
-        } finally {
+        }
+    } catch (error) {
+        console.error('Chat error:', error);
+        
+        // Remove typing indicator if still there
+        if (typingIndicator) {
+            typingIndicator.remove();
+        }
+
+        // Enhanced error messages based on error type
+        let errorMessage = 'Sorry, I encountered an error. Please try again.';
+        
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage = '🔌 Connection issue. Please check your internet and try again.';
+        } else if (error.message.includes('429')) {
+            errorMessage = '⏰ Too many requests. Please wait a moment before trying again.';
+        } else if (error.message.includes('rate limit')) {
+            errorMessage = '🐌 Please slow down - wait a few seconds between messages.';
+        }
+        
+        addMessage(errorMessage, 'ai error');
+    } finally {
+        // Always restore input functionality after a delay
+        setTimeout(() => {
             chatInput.disabled = false;
             sendBtn.disabled = false;
+            sendBtn.textContent = '→';
             chatInput.focus();
-        }
+        }, 1000); // 1 second delay to prevent rapid fire
     }
+}
+
+// Add typing indicator function
+function addTypingIndicator() {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message ai typing-indicator';
+    messageDiv.innerHTML = `
+        <div class="message-content">
+            <div class="typing-animation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    `;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return messageDiv;
+}
+
+// Cooldown timer for rate limiting
+function startCooldownTimer(seconds) {
+    const timerDisplay = document.createElement('div');
+    timerDisplay.className = 'cooldown-timer';
+    timerDisplay.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #ff6b6b;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        z-index: 1000;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    
+    document.body.appendChild(timerDisplay);
+    
+    let remaining = seconds;
+    const countdown = setInterval(() => {
+        timerDisplay.textContent = `Wait ${remaining}s before next message`;
+        remaining--;
+        
+        if (remaining < 0) {
+            clearInterval(countdown);
+            timerDisplay.remove();
+        }
+    }, 1000);
+}
+
+// Enhanced addMessage function with error styling
+function addMessage(content, sender) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${sender}`;
+    
+    // Special styling for error messages
+    let messageClass = 'message-content';
+    if (sender.includes('error')) {
+        messageClass += ' error-message';
+    }
+    
+    messageDiv.innerHTML = `<div class="${messageClass}">${content}</div>`;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
 
     // Add message to chat
     function addMessage(content, sender) {
