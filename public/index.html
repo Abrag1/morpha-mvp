@@ -814,6 +814,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
     let currentDocumentId = null;
+    let lastUploadedFile = null;
     let isCollapsed = false;
     let isResizing = false;
 
@@ -849,15 +850,52 @@ uploadNewBtn.addEventListener('click', () => {
 fileInput.addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
         const uploadType = fileInput.dataset.uploadType || 'initial';
+        const newFile = e.target.files[0];
+        
+        // Check if it's the same document being uploaded again
+        if (uploadType === 'new' && currentDocumentId && lastUploadedFile) {
+            if (isSameFile(newFile, lastUploadedFile)) {
+                // Show confirmation dialog for same document
+                const userChoice = confirm(
+                    `You are currently reviewing "${lastUploadedFile.name}".\n\n` +
+                    `Do you want to start analyzing this document from scratch?\n\n` +
+                    `• Click "OK" to restart analysis\n` +
+                    `• Click "Cancel" to continue with current analysis`
+                );
+                
+                if (!userChoice) {
+                    // User chose to cancel - reset file input and return
+                    fileInput.value = '';
+                    return;
+                }
+                // User chose to restart - continue with reset and upload
+            }
+        }
         
         if (uploadType === 'new') {
             // Reset state before uploading new document
             resetApplicationState();
         }
         
-        handleFileUpload(e.target.files[0]);
+        // Store file info for future comparison
+        lastUploadedFile = {
+            name: newFile.name,
+            size: newFile.size,
+            type: newFile.type,
+            lastModified: newFile.lastModified
+        };
+        
+        handleFileUpload(newFile);
     }
 });
+
+// Compare if two files are the same
+function isSameFile(file1, file2) {
+    return file1.name === file2.name && 
+           file1.size === file2.size && 
+           file1.type === file2.type &&
+           Math.abs(file1.lastModified - file2.lastModified) < 1000; // 1 second tolerance
+}
 
 // Reset application state for new document uploads
 function resetApplicationState() {
@@ -866,10 +904,12 @@ function resetApplicationState() {
     // Clear current document
     currentDocumentId = null;
     
-    // Clear chat messages
+    // ENHANCED: Clear chat messages more thoroughly
     const chatMessages = document.getElementById('chatMessages');
     if (chatMessages) {
+        // Clear all messages
         chatMessages.innerHTML = '';
+        console.log('Chat messages cleared');
     }
     
     // Clear chat input
@@ -877,6 +917,7 @@ function resetApplicationState() {
     if (chatInput) {
         chatInput.value = '';
         chatInput.disabled = false;
+        chatInput.placeholder = 'Ask a question...';
     }
     
     // Reset send button
@@ -899,7 +940,7 @@ function resetApplicationState() {
     
     const pdfViewer = document.getElementById('pdfViewer');
     if (pdfViewer) {
-        pdfViewer.innerHTML = '';
+        pdfViewer.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #666;">Upload a document to view it here</div>';
     }
     
     // Clear suggested questions
@@ -943,7 +984,12 @@ function resetApplicationState() {
     // Reset file input
     fileInput.value = '';
     
-    console.log('Application state reset complete');
+    // Force scroll chat to top
+    if (chatMessages) {
+        chatMessages.scrollTop = 0;
+    }
+    
+    console.log('Application state reset complete - chat history cleared');
 }
 
     // Sidebar toggle
@@ -1065,6 +1111,11 @@ function resetApplicationState() {
                 currentDocumentId = result.documentId;
                 displayAnalysis(result.analysis, file.name);
                 loadSuggestedQuestions();
+                // Ensure chat is cleared for new document
+if (document.getElementById('chatMessages')) {
+    document.getElementById('chatMessages').innerHTML = '';
+    console.log('Chat cleared after successful upload');
+}
                 
                 // Hide loading and show content
                 loadingSection.classList.add('hidden');
