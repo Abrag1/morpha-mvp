@@ -606,6 +606,63 @@
         #fileInput {
             display: none;
         }
+        /* Typing indicator animation */
+.typing-indicator .message-content {
+    background: #f0f0f0 !important;
+    border: 1px solid #e0e0e0 !important;
+}
+
+.typing-animation {
+    display: flex;
+    gap: 4px;
+    padding: 8px 0;
+}
+
+.typing-animation span {
+    width: 8px;
+    height: 8px;
+    background: #666;
+    border-radius: 50%;
+    animation: typing 1.4s infinite ease-in-out;
+}
+
+.typing-animation span:nth-child(1) { animation-delay: -0.32s; }
+.typing-animation span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* Error message styling */
+.error-message {
+    background: #fee !important;
+    border: 1px solid #fcc !important;
+    color: #c33 !important;
+}
+
+/* Disabled input styling */
+.chat-input input:disabled {
+    background: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+}
+
+.send-btn:disabled {
+    background: #ccc !important;
+    cursor: not-allowed;
+}
+
+/* Enhanced send button states */
+.send-btn {
+    transition: all 0.3s ease;
+    font-weight: bold;
+}
+
+.send-btn:hover:not(:disabled) {
+    background: #5a6fd8;
+    transform: scale(1.1);
+}
     </style>
 </head>
 <body>
