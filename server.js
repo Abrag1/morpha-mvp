@@ -284,28 +284,8 @@ app.post('/upload', uploadLimiter, upload.single('document'), async (req, res) =
         }
 
         // Enhanced analysis prompt with token estimation
-        const analysisPrompt = `
-You are a legal contract expert analyzing a document. Even if the text extraction is incomplete due to scanning/image quality, provide the best analysis possible based on available text.
-
-For scanned or low-quality text extraction, focus on:
-1. Document Type identification (look for keywords like "lease", "employment", "loan", etc.)
-2. General contract guidance and common issues
-3. What to look for in this type of document
-
-Available text from document:
-${extractedText.substring(0, 6000)}
-
-Provide analysis in JSON format:
-{
-    "documentType": "string",
-    "summary": "string (include note if scanned/limited text)",
-    "risks": ["array of risk strings - include common risks for this document type"],
-    "keyDates": ["array of important dates if found"],
-    "financialTerms": ["array of financial terms if found"],
-    "riskLevel": "low|medium|high",
-    "isScanned": boolean (true if appears to be scanned with limited text)
-}
-`;
+const analysisPrompt = `
+;
 
         const analysis = await openai.chat.completions.create({
             model: "gpt-4",
