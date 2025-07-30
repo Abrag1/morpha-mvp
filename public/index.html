@@ -1249,10 +1249,6 @@ try {
     const deltaX = e.clientX - startX;
     console.log('Mouse move, deltaX:', deltaX);
     
-    // Get the content wrapper width to calculate percentages
-    const contentWrapper = document.querySelector('.content-wrapper');
-    const wrapperWidth = contentWrapper.getBoundingClientRect().width;
-    
     // Calculate new widths
     const newMainWidth = startMainWidth + deltaX;
     const newChatWidth = startChatWidth - deltaX;
@@ -1262,23 +1258,22 @@ try {
     // Set reasonable constraints
     const minMainWidth = 300;
     const minChatWidth = 250;
-    const maxMainWidth = wrapperWidth - minChatWidth - 5; // 5px for resizer
     
     // Check constraints
-    if (newMainWidth >= minMainWidth && 
-        newChatWidth >= minChatWidth && 
-        newMainWidth <= maxMainWidth) {
+    if (newMainWidth >= minMainWidth && newChatWidth >= minChatWidth) {
         
-        // CRITICAL FIX: Use flex-basis instead of width
-        mainPanel.style.flexBasis = newMainWidth + 'px';
-        mainPanel.style.flexGrow = '0';
-        mainPanel.style.flexShrink = '1';
+        // WORKING FIX: Override flex properties completely
+        mainPanel.style.flex = 'none';
+        mainPanel.style.width = newMainWidth + 'px';
+        mainPanel.style.minWidth = newMainWidth + 'px';
+        mainPanel.style.maxWidth = newMainWidth + 'px';
         
-        chatPanel.style.flexBasis = newChatWidth + 'px';
-        chatPanel.style.flexGrow = '0';
-        chatPanel.style.flexShrink = '0';
+        chatPanel.style.flex = 'none';
+        chatPanel.style.width = newChatWidth + 'px';
+        chatPanel.style.minWidth = newChatWidth + 'px';
+        chatPanel.style.maxWidth = newChatWidth + 'px';
         
-        console.log('Applied new flex-basis values');
+        console.log('Applied new widths - forcing override');
     } else {
         console.log('Constraints not met - Main:', newMainWidth, 'Chat:', newChatWidth);
     }
@@ -1286,13 +1281,16 @@ try {
 
 // Reset function for default layout
 function resetPanelSizes() {
-    mainPanel.style.flexBasis = '';
-    mainPanel.style.flexGrow = '1';
-    mainPanel.style.flexShrink = '1';
+    // Reset to original CSS flex values
+    mainPanel.style.flex = '1 1 60%';
+    mainPanel.style.width = '';
+    mainPanel.style.minWidth = '300px';
+    mainPanel.style.maxWidth = '75%';
     
-    chatPanel.style.flexBasis = '350px';
-    chatPanel.style.flexGrow = '0';
-    chatPanel.style.flexShrink = '0';
+    chatPanel.style.flex = '0 0 350px';
+    chatPanel.style.width = '';
+    chatPanel.style.minWidth = '250px';
+    chatPanel.style.maxWidth = '500px';
     
     console.log('Panel sizes reset to default');
 }
