@@ -358,7 +358,8 @@
     display: flex;
     flex-direction: column;
     min-height: 0;
-    height: 100%;
+    height: calc(100vh - 70px);
+    overflow: hidden;
 }
 
         .document-header {
@@ -430,8 +431,10 @@
        .document-content {
     flex: 1;
     padding: 25px;
-    overflow-y: auto;
-    height: auto;
+    overflow: hidden;
+    height: 0;
+    display: flex;
+    flex-direction: column;
     scrollbar-width: thin;
     scrollbar-color: #667eea #f1f1f1;
 }
@@ -457,14 +460,15 @@
         /* Ensure content sections are scrollable */
         .content-section {
     display: none;
-    min-height: 0;
-    height: 100%;
+    flex: 1;
     overflow-y: auto;
 }
 
 .content-section.active {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    height: 100%;
 }
 
         .summary-grid, .red-flags {
