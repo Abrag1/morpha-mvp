@@ -431,10 +431,8 @@
        .document-content {
     flex: 1;
     padding: 25px;
-    overflow: hidden;
-    height: 0;
-    display: flex;
-    flex-direction: column;
+    overflow-y: auto;
+    min-height: 0;
     scrollbar-width: thin;
     scrollbar-color: #667eea #f1f1f1;
 }
@@ -460,15 +458,10 @@
         /* Ensure content sections are scrollable */
         .content-section {
     display: none;
-    flex: 1;
-    overflow-y: auto;
 }
 
 .content-section.active {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    height: 100%;
+    display: block;
 }
 
         .summary-grid, .red-flags {
