@@ -624,6 +624,16 @@ app.get('/documents', (req, res) => {
     });
 });
 
+
+// Serve legal pages
+app.get('/privacy', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'privacy.html'));
+});
+
+app.get('/terms', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'terms.html'));
+});
+
 // Error handling middleware
 app.use((error, req, res, next) => {
     console.error('Error:', error);
