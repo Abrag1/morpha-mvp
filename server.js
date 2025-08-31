@@ -83,6 +83,28 @@ app.use(cors({
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static('public'));
 
+
+// Error tracking
+const errorLog = [];
+const MAX_ERROR_LOG = 100;
+
+function logError(error, context = {}) {
+    const errorEntry = {
+        timestamp: new Date().toISOString(),
+        message: error.message,
+        stack: error.stack,
+        context: context
+    };
+    
+    errorLog.unshift(errorEntry);
+    if (errorLog.length > MAX_ERROR_LOG) {
+        errorLog.pop();
+    }
+    
+    console.error('Error logged:', errorEntry);
+}
+
+
 // Input sanitization function
 function sanitizeInput(input) {
     if (typeof input !== 'string') return input;
@@ -241,6 +263,34 @@ app.get('/admin/stats', (req, res) => {
     });
 });
 
+// Admin endpoint to view errors (protect this!)
+app.get('/admin/errors', (req, res) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || authHeader !== `Bearer ${process.env.ADMIN_SECRET || 'admin123'}`) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    res.json({
+        errors: errorLog,
+        count: errorLog.length,
+        maxErrors: MAX_ERROR_LOG
+    });
+});
+
+// TEST ENDPOINT - Remove in production
+app.get('/test-error', (req, res) => {
+    try {
+        throw new Error('This is a test error');
+    } catch (error) {
+        logError(error, { 
+            endpoint: '/test-error',
+            ip: req.ip,
+            purpose: 'testing error logging'
+        });
+        res.json({ message: 'Error logged successfully' });
+    }
+});
+
 // Upload document with enhanced security
 app.post('/upload', uploadLimiter, upload.single('document'), async (req, res) => {
     try {
@@ -276,9 +326,15 @@ app.post('/upload', uploadLimiter, upload.single('document'), async (req, res) =
                     about terms, dates, or clauses you're concerned about.`;
                 }
             } catch (pdfError) {
-                console.error('PDF parsing error:', pdfError);
-                return res.status(400).json({ error: 'Failed to parse PDF. Please ensure it\'s a valid PDF file.' });
-            }
+    logError(pdfError, {
+        endpoint: '/upload',
+        step: 'pdf-parsing',
+        filename: req.file.originalname,
+        ip: req.ip
+    });
+    console.error('PDF parsing error:', pdfError);
+    return res.status(400).json({ error: 'Failed to parse PDF. Please ensure it\'s a valid PDF file.' });
+}
         } else {
             extractedText = 'Word document processing coming soon...';
         }
@@ -439,8 +495,14 @@ Provide analysis in JSON format:
             tokensUsed: tokensUsed
         });
 
-    } catch (error) {
-        console.error('Upload error:', error);
+   } catch (error) {
+    logError(error, { 
+        endpoint: '/upload', 
+        ip: req.ip,
+        filename: req.file?.originalname,
+        step: 'general-upload'
+    });
+    console.error('Upload error:', error);
         
         // Clean up file if it exists
         if (req.file && fs.existsSync(req.file.path)) {
@@ -534,9 +596,16 @@ Keep your response under 300 words.
         });
 
     } catch (error) {
-        console.error('Chat error:', error);
-        res.status(500).json({ error: 'Failed to process chat: ' + error.message });
-    }
+    logError(error, { 
+        endpoint: '/chat',
+        ip: req.ip,
+        documentId: req.body?.documentId,
+        messageLength: req.body?.message?.length,
+        step: 'chat-processing'
+    });
+    console.error('Chat error:', error);
+    res.status(500).json({ error: 'Failed to process chat: ' + error.message });
+}
 });
 
 // Get suggested questions with IP verification
