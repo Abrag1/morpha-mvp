@@ -786,8 +786,36 @@
     overflow: hidden;
 }
 
+/* demo privacy button style */ 
+.demo-privacy-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 1.05em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2);
+}
 
-    </style>
+.demo-privacy-btn:hover {
+    background: #5a6fd8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.demo-text {
+    color: #666;
+    font-size: 0.9em;
+    margin: 10px 0;
+    font-style: italic;
+}
+</style>
+
+
 </head>
 <body>
 
@@ -820,13 +848,16 @@
             <div class="upload-subtext">PDF and Word documents supported</div>
         </div>
         
-        <div class="landing-footer">
-    <p class="terms-text">
-        Try our product on our own Terms and Services to see how it works and ensure our conditions align with your expectations.
-    </p>
-    <div style="margin-top: 15px;">
-        <a href="/privacy" target="_blank" style="color: #667eea; margin-right: 15px;">Privacy Policy</a>
-        <a href="/terms" target="_blank" style="color: #667eea;">Terms of Service</a>
+    <div class="landing-footer">
+    <!-- New Privacy Demo Button -->
+    <button class="demo-privacy-btn" id="demoPrivacyBtn">
+        Review Our Privacy Policy Using Morpha
+    </button>
+    <p class="demo-text">Come check us out - we're putting our privacy policy so you can see the magic first</p>
+    
+    <!-- Privacy Policy Link Only (Terms removed) -->
+    <div style="margin-top: 20px;">
+        <a href="/privacy" target="_blank" style="color: #667eea; text-decoration: none;">View Full Privacy Policy</a>
     </div>
 </div>
         
@@ -1826,6 +1857,45 @@ function addMessage(content, sender) {
         `;
     }
 });
+
+
+// Privacy Policy Demo - Auto-load functionality
+window.loadPrivacyPolicyDemo = async function() {
+    const privacyPolicyText = `Morpha Privacy Policy
+Effective Date: September 1, 2025
+Contact: privacy@getmorpha.com
+
+[Full privacy policy text here - I'll keep it short for clarity]
+1) Quick Summary
+We collect only what's needed while your contract is being analyzed...`;
+
+    // Create a PDF-like blob from the text
+    const blob = new Blob([privacyPolicyText], { type: 'text/plain' });
+    const file = new File([blob], "Morpha_Privacy_Policy.txt", { 
+        type: "text/plain",
+        lastModified: new Date().getTime()
+    });
+    
+    // Get the file input element
+    const fileInput = document.getElementById('fileInput');
+    
+    // Create a DataTransfer object to programmatically set files
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(file);
+    fileInput.files = dataTransfer.files;
+    
+    // Trigger the change event to process the file
+    const event = new Event('change', { bubbles: true });
+    fileInput.dispatchEvent(event);
+}
+
+// Add click handler for the demo button
+setTimeout(() => {
+    document.getElementById('demoPrivacyBtn')?.addEventListener('click', function() {
+        window.loadPrivacyPolicyDemo();
+    });
+}, 100);
+
     </script>
 </body>
 </html>

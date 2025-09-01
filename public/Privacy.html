@@ -4,55 +4,127 @@
     <meta charset="UTF-8">
     <title>Privacy Policy - Morpha</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; line-height: 1.6; }
-        h1 { color: #667eea; }
-        .back-link { color: #667eea; text-decoration: none; margin-bottom: 20px; display: inline-block; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            max-width: 800px; 
+            margin: 50px auto; 
+            padding: 20px; 
+            line-height: 1.8;
+            color: #333;
+        }
+        h1 { color: #667eea; margin-bottom: 10px; }
+        h2 { color: #4a5568; margin-top: 35px; margin-bottom: 15px; font-size: 1.3em; }
+        .back-link { 
+            color: #667eea; 
+            text-decoration: none; 
+            margin-bottom: 20px; 
+            display: inline-block; 
+        }
+        .back-link:hover { text-decoration: underline; }
+        .meta-info { color: #666; margin-bottom: 30px; }
+        ul, ol { margin-left: 20px; margin-bottom: 15px; }
+        li { margin-bottom: 8px; }
+        a { color: #667eea; }
+        .summary-box {
+            background: #f8f9ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
     <a href="/" class="back-link">← Back to Morpha</a>
-    <h1>Privacy Policy</h1>
-    <p><strong>Effective Date:</strong> [Current Date]</p>
-    
-    <h2>Information We Collect</h2>
-    <p>We collect the following information:</p>
+    <h1>Morpha Privacy Policy</h1>
+    <div class="meta-info">
+        <p><strong>Effective Date:</strong> September 1, 2025</p>
+        <p><strong>Contact:</strong> <a href="mailto:privacy@getmorpha.com">privacy@getmorpha.com</a></p>
+    </div>
+
+    <h2>1) Quick Summary</h2>
+    <div class="summary-box">
+        <ul>
+            <li>We collect only what's needed while your contract is being analyzed: a session identifier (a temporary technical marker such as your IP address combined with browser/device type) and session length.</li>
+            <li>Uploaded contracts are processed in your session only and not stored permanently.</li>
+            <li>Contract text is processed through a trusted third-party AI provider (currently OpenAI). OpenAI does not use API data to train its models. Logs may be retained for up to 30 days for safety/compliance purposes, then removed. For detailed reference links, see Point 4.</li>
+            <li>We do not sell your data.</li>
+            <li>No user accounts at this time; everything is session-based.</li>
+        </ul>
+    </div>
+
+    <h2>2) Information We Collect</h2>
+    <p>We collect information only while your contract is being analyzed and reviewed during your session:</p>
     <ul>
-        <li>Documents you upload for analysis</li>
-        <li>Questions you ask about your documents</li>
-        <li>Your IP address for session management</li>
-        <li>Basic usage analytics (page views, feature usage)</li>
+        <li><strong>Session & technical data:</strong> IP address, browser/device details (user-agent), and session duration.</li>
+        <li><strong>Document content you upload:</strong> The contract text you submit for analysis.</li>
     </ul>
-    
-    <h2>How We Use Your Information</h2>
-    <p>We use your information to:</p>
+    <p>No other personal identifiers (such as names, emails, or payment data) are collected.</p>
+
+    <h2>3) How We Use Information</h2>
+    <p>We use the information we collect only to:</p>
     <ul>
-        <li>Analyze your contracts and provide AI-powered insights</li>
-        <li>Respond to your questions about documents</li>
-        <li>Maintain your session while using the service</li>
-        <li>Improve our service based on usage patterns</li>
+        <li>Provide contract analysis and plain-English summaries.</li>
+        <li>Highlight risks and red flags in your document.</li>
+        <li>Enable chat-based Q&A about your contract.</li>
+        <li>Monitor session length and number of sessions for basic service reliability.</li>
     </ul>
-    
-    <h2>Data Security</h2>
-    <p>We implement security measures including:</p>
+    <p>That is the full and complete list — nothing else.</p>
+
+    <h2>4) Third-Party AI Processing (currently OpenAI)</h2>
+    <p>To provide analysis, we transmit uploaded text to a trusted third-party AI provider (currently OpenAI).</p>
+    <p>For full details, see:</p>
     <ul>
-        <li>HTTPS encryption for all data transmission</li>
-        <li>Temporary storage only - documents are deleted after your session</li>
-        <li>No permanent storage of personal information</li>
-        <li>Rate limiting to prevent abuse</li>
+        <li><a href="https://openai.com/policies/api-data-usage-policies" target="_blank">OpenAI API Data Usage Policy</a></li>
+        <li><a href="https://platform.openai.com/docs/guides/your-data" target="_blank">OpenAI "Your Data" (Platform Data Controls)</a></li>
     </ul>
-    
-    <h2>Third-Party Services</h2>
-    <p>We use OpenAI's GPT-4 API to analyze your documents. Your document text is sent to OpenAI for processing but is not stored by them permanently.</p>
-    
-    <h2>Your Rights</h2>
-    <p>You have the right to:</p>
+    <p><strong>Key points from OpenAI's policies:</strong></p>
     <ul>
-        <li>Access your data during your session</li>
-        <li>Request deletion of your uploaded documents</li>
-        <li>Opt-out of analytics tracking</li>
+        <li><strong>No model training:</strong> Data sent via the API is not used to train or improve OpenAI models unless you explicitly opt in.</li>
+        <li><strong>Retention:</strong> OpenAI may retain API inputs/outputs for up to 30 days to monitor abuse and meet compliance obligations, then deletes them (unless legally required to retain longer).</li>
+        <li><strong>Security & access:</strong> Data is encrypted in transit and at rest, with access restricted to authorized personnel.</li>
+        <li><strong>Ownership:</strong> You retain ownership of your inputs and outputs.</li>
     </ul>
-    
-    <h2>Contact Us</h2>
-    <p>For privacy concerns, contact us at: [your-email@domain.com]</p>
+    <p>If we change providers in the future, this section will be updated.</p>
+
+    <h2>5) Our Retention</h2>
+    <ul>
+        <li><strong>Uploaded contracts:</strong> Processed only during your active session; any temporary files are deleted within 24 hours.</li>
+        <li><strong>Session metadata (aggregate):</strong> Retained briefly to maintain reliability and detect abuse, then purged.</li>
+    </ul>
+
+    <h2>6) Cookies & Local Storage</h2>
+    <p>We may use strictly necessary cookies or browser storage to keep your document active during your session (e.g., maintaining state). We do not use advertising or tracking cookies. (We may update this section if cookie usage changes.)</p>
+
+    <h2>7) Sharing & Selling</h2>
+    <ul>
+        <li>We do not sell or rent your data.</li>
+        <li>Data is shared only with OpenAI, for the purpose of analyzing your contract through their API. OpenAI may retain API inputs/outputs for up to 30 days for abuse monitoring and compliance, after which they are deleted unless legally required to keep longer.</li>
+    </ul>
+
+    <h2>8) Security</h2>
+    <p>We apply industry-standard safeguards: encrypted transfers, restricted access, and safe coding practices. No system is perfectly secure. If a breach occurs, we will take appropriate steps and notify as required by law.</p>
+
+    <h2>9) Your Rights</h2>
+    <ul>
+        <li>Our third-party provider (currently OpenAI) will not use your API data for model training.</li>
+        <li>OpenAI may keep your inputs/outputs for up to 30 days only for:
+            <ol>
+                <li>Abuse monitoring,</li>
+                <li>Service functionality, and</li>
+                <li>Legal compliance.</li>
+            </ol>
+        </li>
+    </ul>
+    <p>Because Morpha does not maintain accounts or store your documents, there is generally no data to delete after your session ends. If you have concerns about retained metadata, contact <a href="mailto:privacy@getmorpha.com">privacy@getmorpha.com</a>.</p>
+
+    <h2>10) Children</h2>
+    <p>Morpha is not intended for children under 13, and we do not knowingly collect data from children.</p>
+
+    <h2>11) Changes</h2>
+    <p>We may update this policy as we add features (such as accounts or document storage). Updates will include a new effective date and clear notice of material changes.</p>
+
+    <h2>12) Contact</h2>
+    <p>Questions or requests: <a href="mailto:privacy@getmorpha.com">privacy@getmorpha.com</a></p>
 </body>
 </html>
