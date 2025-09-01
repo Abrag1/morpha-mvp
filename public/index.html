@@ -1861,39 +1861,61 @@ function addMessage(content, sender) {
 
 // Privacy Policy Demo - Auto-load functionality
 window.loadPrivacyPolicyDemo = async function() {
+    // First, check if we're on the landing page
+    const landingPage = document.getElementById('landingPage');
+    const fileInput = document.getElementById('fileInput');
+    
+    if (!fileInput) {
+        console.error('File input not found');
+        return;
+    }
+
     const privacyPolicyText = `Morpha Privacy Policy
 Effective Date: September 1, 2025
 Contact: privacy@getmorpha.com
 
-[Full privacy policy text here - I'll keep it short for clarity]
 1) Quick Summary
-We collect only what's needed while your contract is being analyzed...`;
+We collect only what's needed while your contract is being analyzed: a session identifier (a temporary technical marker such as your IP address combined with browser/device type) and session length.
+Uploaded contracts are processed in your session only and not stored permanently.
+Contract text is processed through a trusted third-party AI provider (currently OpenAI). OpenAI does not use API data to train its models. Logs may be retained for up to 30 days for safety/compliance purposes, then removed.
+We do not sell your data.
+No user accounts at this time; everything is session-based.
 
-    // Create a PDF-like blob from the text
-    const blob = new Blob([privacyPolicyText], { type: 'text/plain' });
-    const file = new File([blob], "Morpha_Privacy_Policy.txt", { 
-        type: "text/plain",
+[Rest of privacy policy text...]`;
+
+    // Create a mock PDF file (the server checks file extension, not actual content)
+    const blob = new Blob([privacyPolicyText], { type: 'application/pdf' });
+    const file = new File([blob], "Morpha_Privacy_Policy.pdf", { 
+        type: "application/pdf",
         lastModified: new Date().getTime()
     });
     
-    // Get the file input element
-    const fileInput = document.getElementById('fileInput');
-    
-    // Create a DataTransfer object to programmatically set files
+    // Set the file programmatically
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
     fileInput.files = dataTransfer.files;
     
-    // Trigger the change event to process the file
-    const event = new Event('change', { bubbles: true });
-    fileInput.dispatchEvent(event);
+    // Set upload type
+    fileInput.dataset.uploadType = 'initial';
+    
+    // Call the existing handleFileUpload function
+    if (typeof handleFileUpload === 'function') {
+        handleFileUpload(file);
+    } else {
+        // If handleFileUpload is not accessible, trigger change event
+        const event = new Event('change', { bubbles: true });
+        fileInput.dispatchEvent(event);
+    }
 }
 
-// Add click handler for the demo button
+// Add click handler for the demo button with a small delay to ensure DOM is ready
 setTimeout(() => {
-    document.getElementById('demoPrivacyBtn')?.addEventListener('click', function() {
-        window.loadPrivacyPolicyDemo();
-    });
+    const demoBtn = document.getElementById('demoPrivacyBtn');
+    if (demoBtn) {
+        demoBtn.addEventListener('click', function() {
+            window.loadPrivacyPolicyDemo();
+        });
+    }
 }, 100);
 
     </script>
