@@ -662,13 +662,48 @@ app.get('/suggestions/:documentId', (req, res) => {
     });
 });
 
+
 // Serve PDF files with access control
 app.get('/pdf/:documentId', (req, res) => {
     const clientIP = req.ip || req.connection.remoteAddress;
     const document = documents.find(doc => doc.id === req.params.documentId && doc.clientIP === clientIP);
     
-    if (!document || !document.pdfPath) {
+    if (!document) {
         return res.status(404).json({ error: 'PDF not found or access denied' });
+    }
+
+    // Special handling for privacy policy demo
+    if (document.filename === 'Morpha_Privacy_Policy.pdf') {
+        // Create a simple HTML page showing the privacy policy text
+        const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    padding: 20px;
+                    line-height: 1.6;
+                    max-width: 800px;
+                    margin: 0 auto;
+                }
+                h1 { color: #667eea; }
+                h2 { color: #4a5568; margin-top: 20px; }
+            </style>
+        </head>
+        <body>
+            <h1>Morpha Privacy Policy</h1>
+            <pre style="white-space: pre-wrap; font-family: inherit;">${document.extractedText}</pre>
+        </body>
+        </html>`;
+        
+        res.setHeader('Content-Type', 'text/html');
+        return res.send(htmlContent);
+    }
+
+    // Regular PDF handling
+    if (!document.pdfPath) {
+        return res.status(404).json({ error: 'PDF file not available' });
     }
 
     if (!fs.existsSync(document.pdfPath)) {

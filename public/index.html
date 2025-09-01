@@ -1858,11 +1858,8 @@ function addMessage(content, sender) {
     }
 });
 
-
 // Privacy Policy Demo - Auto-load functionality
 window.loadPrivacyPolicyDemo = async function() {
-    // First, check if we're on the landing page
-    const landingPage = document.getElementById('landingPage');
     const fileInput = document.getElementById('fileInput');
     
     if (!fileInput) {
@@ -1877,13 +1874,60 @@ Contact: privacy@getmorpha.com
 1) Quick Summary
 We collect only what's needed while your contract is being analyzed: a session identifier (a temporary technical marker such as your IP address combined with browser/device type) and session length.
 Uploaded contracts are processed in your session only and not stored permanently.
-Contract text is processed through a trusted third-party AI provider (currently OpenAI). OpenAI does not use API data to train its models. Logs may be retained for up to 30 days for safety/compliance purposes, then removed.
+Contract text is processed through a trusted third-party AI provider (currently OpenAI). OpenAI does not use API data to train its models. Logs may be retained for up to 30 days for safety/compliance purposes, then removed. For detailed reference links, see Point 4.
 We do not sell your data.
 No user accounts at this time; everything is session-based.
 
-[Rest of privacy policy text...]`;
+2) Information We Collect
+We collect information only while your contract is being analyzed and reviewed during your session:
+- Session & technical data: IP address, browser/device details (user-agent), and session duration.
+- Document content you upload: The contract text you submit for analysis.
+No other personal identifiers (such as names, emails, or payment data) are collected.
 
-    // Create a mock PDF file (the server checks file extension, not actual content)
+3) How We Use Information
+We use the information we collect only to:
+- Provide contract analysis and plain-English summaries.
+- Highlight risks and red flags in your document.
+- Enable chat-based Q&A about your contract.
+- Monitor session length and number of sessions for basic service reliability.
+That is the full and complete list — nothing else.
+
+4) Third-Party AI Processing (currently OpenAI)
+To provide analysis, we transmit uploaded text to a trusted third-party AI provider (currently OpenAI).
+Key points from OpenAI's policies:
+- No model training: Data sent via the API is not used to train or improve OpenAI models unless you explicitly opt in.
+- Retention: OpenAI may retain API inputs/outputs for up to 30 days to monitor abuse and meet compliance obligations, then deletes them.
+- Security & access: Data is encrypted in transit and at rest, with access restricted to authorized personnel.
+- Ownership: You retain ownership of your inputs and outputs.
+
+5) Our Retention
+- Uploaded contracts: Processed only during your active session; any temporary files are deleted within 24 hours.
+- Session metadata (aggregate): Retained briefly to maintain reliability and detect abuse, then purged.
+
+6) Cookies & Local Storage
+We may use strictly necessary cookies or browser storage to keep your document active during your session. We do not use advertising or tracking cookies.
+
+7) Sharing & Selling
+- We do not sell or rent your data.
+- Data is shared only with OpenAI, for the purpose of analyzing your contract through their API.
+
+8) Security
+We apply industry-standard safeguards: encrypted transfers, restricted access, and safe coding practices.
+
+9) Your Rights
+- Our third-party provider (currently OpenAI) will not use your API data for model training.
+- Because Morpha does not maintain accounts or store your documents, there is generally no data to delete after your session ends.
+
+10) Children
+Morpha is not intended for children under 13, and we do not knowingly collect data from children.
+
+11) Changes
+We may update this policy as we add features. Updates will include a new effective date and clear notice of material changes.
+
+12) Contact
+Questions or requests: privacy@getmorpha.com`;
+
+    // Create a mock PDF file
     const blob = new Blob([privacyPolicyText], { type: 'application/pdf' });
     const file = new File([blob], "Morpha_Privacy_Policy.pdf", { 
         type: "application/pdf",
@@ -1898,25 +1942,11 @@ No user accounts at this time; everything is session-based.
     // Set upload type
     fileInput.dataset.uploadType = 'initial';
     
-    // Call the existing handleFileUpload function
-    if (typeof handleFileUpload === 'function') {
-        handleFileUpload(file);
-    } else {
-        // If handleFileUpload is not accessible, trigger change event
-        const event = new Event('change', { bubbles: true });
-        fileInput.dispatchEvent(event);
-    }
+    // Trigger the file upload
+    const event = new Event('change', { bubbles: true });
+    fileInput.dispatchEvent(event);
 }
 
-// Add click handler for the demo button with a small delay to ensure DOM is ready
-setTimeout(() => {
-    const demoBtn = document.getElementById('demoPrivacyBtn');
-    if (demoBtn) {
-        demoBtn.addEventListener('click', function() {
-            window.loadPrivacyPolicyDemo();
-        });
-    }
-}, 100);
 
     </script>
 </body>
