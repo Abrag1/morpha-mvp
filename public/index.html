@@ -1860,12 +1860,17 @@ function addMessage(content, sender) {
 
 // Privacy Policy Demo - Auto-load functionality
 window.loadPrivacyPolicyDemo = async function() {
+    console.log('Privacy demo function called');
+    
     const fileInput = document.getElementById('fileInput');
     
     if (!fileInput) {
         console.error('File input not found');
+        alert('Error: File input not found. Please refresh the page.');
         return;
     }
+
+    console.log('Creating privacy policy file...');
 
     const privacyPolicyText = `Morpha Privacy Policy
 Effective Date: September 1, 2025
@@ -1934,6 +1939,8 @@ Questions or requests: privacy@getmorpha.com`;
         lastModified: new Date().getTime()
     });
     
+    console.log('File created:', file);
+    
     // Set the file programmatically
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
@@ -1942,10 +1949,32 @@ Questions or requests: privacy@getmorpha.com`;
     // Set upload type
     fileInput.dataset.uploadType = 'initial';
     
+    console.log('Triggering file upload...');
+    
     // Trigger the file upload
     const event = new Event('change', { bubbles: true });
     fileInput.dispatchEvent(event);
 }
+
+// Make sure the button click handler is properly attached
+document.addEventListener('DOMContentLoaded', function() {
+    // Wait a bit to ensure everything is loaded
+    setTimeout(() => {
+        const demoBtn = document.getElementById('demoPrivacyBtn');
+        console.log('Demo button found:', demoBtn);
+        
+        if (demoBtn) {
+            demoBtn.addEventListener('click', function(e) {
+                console.log('Demo button clicked');
+                e.preventDefault();
+                window.loadPrivacyPolicyDemo();
+            });
+            console.log('Click handler attached to demo button');
+        } else {
+            console.error('Demo button not found in DOM');
+        }
+    }, 500);
+});
 
 
     </script>
