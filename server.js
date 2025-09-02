@@ -530,8 +530,8 @@ app.post('/chat', chatLimiter, async (req, res) => {
         
         // Additional session limits
         if (session.chatCount >= 50) {
-            return res.status(429).json({ 
-                error: 'Daily chat limit reached. Please try again tomorrow.' 
+            return res.status(429).json({
+                error: 'Daily chat limit reached. Please try again tomorrow.'
             });
         }
         
@@ -552,14 +552,42 @@ app.post('/chat', chatLimiter, async (req, res) => {
             return res.status(400).json({ error: 'Message too long. Please keep it under 500 characters.' });
         }
 
-        // Find document with IP verification
-        const document = documents.find(doc => doc.id === documentId && doc.clientIP === clientIP);
+        // Find document - MODIFIED TO BE MORE FLEXIBLE FOR PRIVACY DEMO
+        let document = documents.find(doc => doc.id === documentId && doc.clientIP === clientIP);
+        
+        // Special handling for privacy policy demo - allow chat even if IP doesn't match
         if (!document) {
-            return res.status(404).json({ error: 'Document not found or access denied' });
+            document = documents.find(doc => 
+                doc.id === documentId && 
+                doc.filename === 'Morpha_Privacy_Policy.pdf'
+            );
+            
+            if (document) {
+                console.log('Privacy policy demo document found, allowing chat despite IP mismatch');
+            }
+        }
+        
+        if (!document) {
+            console.log('Document not found. Looking for:', documentId);
+            console.log('Client IP:', clientIP);
+            console.log('Available documents:', documents.map(d => ({
+                id: d.id,
+                filename: d.filename,
+                clientIP: d.clientIP
+            })));
+            
+            return res.status(404).json({ 
+                error: 'Document not found. Please upload a new document.',
+                debug: {
+                    requestedId: documentId,
+                    clientIP: clientIP,
+                    availableCount: documents.length
+                }
+            });
         }
 
         const chatPrompt = `
-You are a legal contract expert helping a consumer understand their contract. 
+You are a legal contract expert helping a consumer understand their contract.
 
 Contract Summary:
 - Type: ${document.analysis.documentType}
@@ -605,16 +633,16 @@ Keep your response under 300 words.
         });
 
     } catch (error) {
-    logError(error, { 
-        endpoint: '/chat',
-        ip: req.ip,
-        documentId: req.body?.documentId,
-        messageLength: req.body?.message?.length,
-        step: 'chat-processing'
-    });
-    console.error('Chat error:', error);
-    res.status(500).json({ error: 'Failed to process chat: ' + error.message });
-}
+        logError(error, { 
+            endpoint: '/chat',
+            ip: req.ip,
+            documentId: req.body?.documentId,
+            messageLength: req.body?.message?.length,
+            step: 'chat-processing'
+        });
+        console.error('Chat error:', error);
+        res.status(500).json({ error: 'Failed to process chat: ' + error.message });
+    }
 });
 
 // Get suggested questions with IP verification
