@@ -239,6 +239,18 @@ function trackUsage(type, tokens = 0) {
     });
 }
 
+// Log document count periodically
+setInterval(() => {
+    console.log('Current documents in memory:', {
+        count: documents.length,
+        documents: documents.map(d => ({
+            id: d.id,
+            filename: d.filename,
+            uploadTime: d.uploadDate
+        }))
+    });
+}, 60000); // Every minute
+
 // File upload configuration with enhanced security
 const upload = multer({
     dest: 'uploads/',
