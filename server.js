@@ -500,7 +500,8 @@ DOCUMENT TYPES TO CHOOSE FROM:
 5. "Purchase Agreement" - Real estate purchases, vehicle sales, major purchases, sales contracts
 6. "Loan Document" - Personal loans, mortgages, credit agreements, financing contracts
 7. "NDA/Confidentiality" - Non-disclosure agreements, confidentiality contracts, privacy agreements
-8. "Other" - Any contract that doesn't clearly fit the above categories
+8. "User Agreement" - Website Terms of Service, App ToS, Privacy Policies, Subscription Agreements, End-User License Agreements (EULA)
+9. "Other" - Any contract that doesn't clearly fit the above categories
 
 CLASSIFICATION KEYWORDS TO LOOK FOR:
 - Rental/Lease: "tenant", "landlord", "rent", "lease term", "premises", "property", "occupancy"
@@ -510,6 +511,7 @@ CLASSIFICATION KEYWORDS TO LOOK FOR:
 - Purchase: "buyer", "seller", "purchase price", "sale", "transfer of ownership", "closing"
 - Loan: "borrower", "lender", "principal", "interest rate", "loan amount", "repayment", "mortgage"
 - NDA: "confidential", "non-disclosure", "proprietary", "trade secrets", "confidentiality"
+- User Agreement: "terms of service", "privacy policy", "user agreement", "account", "data collection", "cookies", "arbitration", "delete account", "opt-out", "license", "EULA", "subscriber agreement", "acceptable use", "user content", "GDPR", "CCPA"
 
 INTELLIGENT RISK ASSESSMENT CRITERIA:
 
@@ -547,6 +549,12 @@ FOR NDA/CONFIDENTIALITY:
 HIGH RISK: Unlimited time period, overly broad definition of confidential info, severe penalties, no mutual protection, covers publicly available info
 MEDIUM RISK: 2-5 year period, reasonably defined confidential info, standard penalties, some mutual aspects, some public info exclusions
 LOW RISK: Limited time period (≤2 years), narrowly defined confidential info, reasonable penalties, mutual protection, clear public info exclusions
+
+FOR USER AGREEMENTS:
+HIGH RISK: Indefinite/undefined data retention, tracking across third-party sites/shadow profiling, broad/unclear third-party data sharing, provider can unilaterally change terms without notice, no right to delete account/data, forced arbitration/waiver of class action rights, ability to read private communications
+MEDIUM RISK: First-party cookies/local storage for functionality, limited logging (30 days), content removal for vague ToS violations, minimum age gate ("13+"), standard compliance with legal requests
+LOW RISK: Minimal purpose-specific data collection, no selling/brokering of user data, clear opt-in for third-party sharing, easy account deletion with retention limits, transparent language about data use, encryption and security best practices, content ownership stays with user, anonymous/guest use allowed
+
 
 RISK FACTOR WEIGHTING (Most to Least Important):
 1. Payment/Financial terms (highest weight)
@@ -837,22 +845,42 @@ app.get('/suggestions/:documentId', (req, res) => {
             "What happens if I miss a payment?",
             "Are there any hidden fees?"
         ],
+        user_agreement: [
+            "What data is collected and shared?",
+            "How is the data protected and stored?",
+            "What tracking tools are used?",
+            "What options do I have to opt out or delete data?"
+        ],
         default: [
-            "What are the most important terms I should know?",
-            "Are there any red flags in this contract?",
+            "What are the most important terms I should know?",,
             "What are my main obligations?",
             "What happens if I want to cancel?"
         ]
     };
 
+    // Map document types to suggestion sets
     const docType = document.analysis.documentType.toLowerCase();
-    const questionSet = suggestions[docType] || suggestions.default;
+    let questionSet;
+    
+    if (docType.includes('lease') || docType.includes('rental')) {
+        questionSet = suggestions.lease;
+    } else if (docType.includes('employment')) {
+        questionSet = suggestions.employment;
+    } else if (docType.includes('loan')) {
+        questionSet = suggestions.loan;
+    } else if (docType.includes('user agreement')) {
+        questionSet = suggestions.user_agreement;
+    } else {
+        questionSet = suggestions.default;
+    }
 
     res.json({
         success: true,
         suggestions: questionSet
     });
 });
+
+
 
 
 // Serve PDF files with access control
