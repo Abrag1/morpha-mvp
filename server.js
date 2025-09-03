@@ -250,9 +250,20 @@ app.get('/health', (req, res) => {
 
 // Admin stats endpoint (basic protection)
 app.get('/admin/stats', (req, res) => {
-    // Basic auth check (in production, use proper authentication)
+    // Check both query parameter and Authorization header
     const authHeader = req.headers.authorization;
-    if (!authHeader || authHeader !== `Bearer ${process.env.ADMIN_SECRET || 'admin123'}`) {
+    const queryToken = req.query.token;
+    
+    // Extract token from either source
+    let token = null;
+    if (queryToken) {
+        token = queryToken;
+    } else if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.replace('Bearer ', '');
+    }
+    
+    // Verify token matches ADMIN_SECRET
+    if (!token || token !== process.env.ADMIN_SECRET) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
     
