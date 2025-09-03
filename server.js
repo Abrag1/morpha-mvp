@@ -105,6 +105,79 @@ function logError(error, context = {}) {
 }
 
 
+// Session-based metrics (no device tracking)
+const sessionMetrics = {
+    sessions: {}, // Active sessions
+    daily: {}, // Daily aggregates
+    
+    recordEvent: function(sessionId, event) {
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Initialize daily metrics
+        if (!this.daily[today]) {
+            this.daily[today] = {
+                total_visitors: 0,
+                personal_uploads: 0,
+                sessions_with_upload: new Set(),
+                sessions_with_multiple_actions: new Set(),
+                action_counts: {}
+            };
+        }
+        
+        // Initialize session
+        if (!this.sessions[sessionId]) {
+            this.sessions[sessionId] = {
+                started: new Date(),
+                actions: [],
+                has_upload: false
+            };
+            this.daily[today].total_visitors++;
+        }
+        
+        // Record action
+        this.sessions[sessionId].actions.push(event);
+        
+        // Track specific events
+        if (event === 'personal_upload') {
+            this.sessions[sessionId].has_upload = true;
+            this.daily[today].personal_uploads++;
+            this.daily[today].sessions_with_upload.add(sessionId);
+        }
+        
+        // Check for multiple meaningful actions
+        const meaningfulActions = this.sessions[sessionId].actions.filter(
+            a => ['personal_upload', 'used_chat', 'view_red_flags'].includes(a)
+        );
+        
+        if (meaningfulActions.length > 1) {
+            this.daily[today].sessions_with_multiple_actions.add(sessionId);
+        }
+        
+        // Count action types
+        this.daily[today].action_counts[event] = 
+            (this.daily[today].action_counts[event] || 0) + 1;
+    },
+    
+    cleanOldData: function() {
+        // Remove data older than 2 weeks
+        const twoWeeksAgo = new Date();
+        twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+        const cutoff = twoWeeksAgo.toISOString().split('T')[0];
+        
+        Object.keys(this.daily).forEach(date => {
+            if (date < cutoff) delete this.daily[date];
+        });
+        
+        // Clean old sessions (older than 24 hours)
+        const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        Object.keys(this.sessions).forEach(sid => {
+            if (new Date(this.sessions[sid].started) < oneDayAgo) {
+                delete this.sessions[sid];
+            }
+        });
+    }
+};
+
 // Input sanitization function
 function sanitizeInput(input) {
     if (typeof input !== 'string') return input;
@@ -248,30 +321,86 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Admin stats endpoint (basic protection)
+// Admin stats endpoint with metrics
 app.get('/admin/stats', (req, res) => {
-    // Check both query parameter and Authorization header
     const authHeader = req.headers.authorization;
-    const queryToken = req.query.token;
+    const token = req.query.token || (authHeader ? authHeader.replace('Bearer ', '') : '');
     
-    // Extract token from either source
-    let token = null;
-    if (queryToken) {
-        token = queryToken;
-    } else if (authHeader && authHeader.startsWith('Bearer ')) {
-        token = authHeader.replace('Bearer ', '');
-    }
-    
-    // Verify token matches ADMIN_SECRET
     if (!token || token !== process.env.ADMIN_SECRET) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
     
-    res.json({
+    // Calculate metrics
+    const metricsReport = {
         usage: usageStats,
         activeSessions: sessions.size,
-        totalDocuments: documents.length
+        totalDocuments: documents.length,
+        metrics: {
+            today: {},
+            last_7_days: {},
+            last_14_days: {}
+        }
+    };
+    
+    // Today's metrics
+    const today = new Date().toISOString().split('T')[0];
+    if (sessionMetrics.daily[today]) {
+        const td = sessionMetrics.daily[today];
+        metricsReport.metrics.today = {
+            visitors: td.total_visitors,
+            upload_conversion: td.total_visitors > 0 
+                ? ((td.sessions_with_upload.size / td.total_visitors) * 100).toFixed(1) + '%'
+                : '0%',
+            multi_action_rate: td.total_visitors > 0
+                ? ((td.sessions_with_multiple_actions.size / td.total_visitors) * 100).toFixed(1) + '%'
+                : '0%',
+            total_uploads: td.personal_uploads,
+            action_breakdown: td.action_counts
+        };
+    }
+    
+    // Calculate 7-day and 14-day aggregates
+    const now = new Date();
+    let visitors7d = 0, uploads7d = new Set(), multiAction7d = new Set();
+    let visitors14d = 0, uploads14d = new Set(), multiAction14d = new Set();
+    
+    Object.entries(sessionMetrics.daily).forEach(([date, data]) => {
+        const dayDiff = Math.floor((now - new Date(date)) / (1000 * 60 * 60 * 24));
+        
+        if (dayDiff <= 7) {
+            visitors7d += data.total_visitors;
+            data.sessions_with_upload.forEach(s => uploads7d.add(s));
+            data.sessions_with_multiple_actions.forEach(s => multiAction7d.add(s));
+        }
+        
+        if (dayDiff <= 14) {
+            visitors14d += data.total_visitors;
+            data.sessions_with_upload.forEach(s => uploads14d.add(s));
+            data.sessions_with_multiple_actions.forEach(s => multiAction14d.add(s));
+        }
     });
+    
+    metricsReport.metrics.last_7_days = {
+        visitors: visitors7d,
+        upload_conversion: visitors7d > 0 
+            ? ((uploads7d.size / visitors7d) * 100).toFixed(1) + '%'
+            : '0%',
+        multi_action_rate: visitors7d > 0
+            ? ((multiAction7d.size / visitors7d) * 100).toFixed(1) + '%'
+            : '0%'
+    };
+    
+    metricsReport.metrics.last_14_days = {
+        visitors: visitors14d,
+        upload_conversion: visitors14d > 0 
+            ? ((uploads14d.size / visitors14d) * 100).toFixed(1) + '%'
+            : '0%',
+        multi_action_rate: visitors14d > 0
+            ? ((multiAction14d.size / visitors14d) * 100).toFixed(1) + '%'
+            : '0%'
+    };
+    
+    res.json(metricsReport);
 });
 
 // Admin endpoint to view errors (protect this!)
@@ -533,6 +662,9 @@ Provide analysis in JSON format:
     }
 });
 
+
+
+
 // Chat with document with enhanced security
 app.post('/chat', chatLimiter, async (req, res) => {
     try {
@@ -655,6 +787,27 @@ Keep your response under 300 words.
         res.status(500).json({ error: 'Failed to process chat: ' + error.message });
     }
 });
+
+
+// Tracking endpoint - session-based, no personal data
+app.post('/track', express.json(), (req, res) => {
+    const { session_id, event } = req.body;
+    
+    if (!session_id || !event) {
+        return res.status(400).json({ error: 'Missing required fields' });
+    }
+    
+    // Record event
+    sessionMetrics.recordEvent(session_id, event);
+    
+    // Occasionally clean old data
+    if (Math.random() < 0.05) { // 5% chance
+        sessionMetrics.cleanOldData();
+    }
+    
+    res.json({ success: true });
+});
+
 
 // Get suggested questions with IP verification
 app.get('/suggestions/:documentId', (req, res) => {

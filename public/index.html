@@ -1276,6 +1276,12 @@ try {
             // Add active class to clicked tab and corresponding content
             tab.classList.add('active');
             document.getElementById(tab.dataset.tab + '-content').classList.add('active');
+       
+                    // Track viewing red flags tab
+        if (tab.dataset.tab === 'red-flags') {
+            trackAction('view_red_flags');
+        }
+       
         });
     });
 
@@ -1401,6 +1407,23 @@ function resetPanelSizes() {
             alert('File size must be less than 10MB.');
             return;
         }
+         
+        // Track real uploads (not privacy demo)
+    if (file.name !== 'Morpha_Privacy_Policy.pdf') {
+        try {
+            await fetch('/track', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    event: 'personal_upload',
+                    session_id: sessionStorage.getItem('session_id') || generateSessionId()
+                })
+            });
+        } catch (e) {
+            // Silent fail - don't break user experience
+        }
+    }
+
 
         // Switch to main app and show loading
         landingPage.style.display = 'none';
@@ -1444,6 +1467,32 @@ if (document.getElementById('chatMessages')) {
             mainApp.style.display = 'none';
         }
     }
+
+// Generate session ID (resets when tab closes)
+function generateSessionId() {
+    const id = Math.random().toString(36).substring(2) + Date.now().toString(36);
+    sessionStorage.setItem('session_id', id);
+    return id;
+}
+
+// Track meaningful actions
+async function trackAction(action) {
+    try {
+        const sessionId = sessionStorage.getItem('session_id') || generateSessionId();
+        await fetch('/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                event: action,
+                session_id: sessionId
+            })
+        });
+    } catch (e) {
+        // Silent fail
+    }
+}    
+
+    
 
     // Display analysis results
     function displayAnalysis(analysis, filename) {
@@ -1635,6 +1684,12 @@ function updateCategoryCount(documentType) {
                 message: message
             })
         });
+
+         if (result.success && result.response) {
+            addMessage(result.response, 'ai');
+            // Track chat usage
+            trackAction('used_chat');
+        }
 
         console.log('Response status:', response.status);
         
