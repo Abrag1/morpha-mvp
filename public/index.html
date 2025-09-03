@@ -1268,21 +1268,20 @@ try {
 
     // Tab switching
     document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            // Remove active class from all tabs and content
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.content-section').forEach(c => c.classList.remove('active'));
-            
-            // Add active class to clicked tab and corresponding content
-            tab.classList.add('active');
-            document.getElementById(tab.dataset.tab + '-content').classList.add('active');
-       
-                    // Track viewing red flags tab
-        if (tab.dataset.tab === 'red-flags') {
+    tab.addEventListener('click', () => {
+        // Remove active class from all tabs
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.content-section').forEach(c => c.classList.remove('active'));
+        
+        // Add active class to clicked tab
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab + '-content').classList.add('active');
+        
+        // NEW: Track viewing red flags tab
+        if (tab.dataset.tab === 'red-flags' && currentDocumentId) {
             trackAction('view_red_flags');
         }
-       
-        });
+    });
     });
 
     // Panel resizing functionality with debugging
@@ -1911,7 +1910,24 @@ function addMessage(content, sender) {
             </iframe>
         `;
     }
+
+
+if (!sessionStorage.getItem('session_id')) {
+    const sessionId = generateSessionId();
+    fetch('/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            event: 'new_visitor',
+            session_id: sessionId
+        })
+    }).catch(() => {});
+}
+
+
 });
+
+
 
 // Privacy Policy Demo - Auto-load functionality
 window.loadPrivacyPolicyDemo = async function() {
