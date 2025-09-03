@@ -688,6 +688,8 @@ app.post('/chat', chatLimiter, async (req, res) => {
         
         const { documentId, message } = req.body;
         
+        console.log('Chat request:', { documentId, messageLength: message?.length, clientIP });
+        
         if (!documentId || !message) {
             return res.status(400).json({ error: 'Document ID and message are required' });
         }
@@ -703,37 +705,33 @@ app.post('/chat', chatLimiter, async (req, res) => {
             return res.status(400).json({ error: 'Message too long. Please keep it under 500 characters.' });
         }
 
-        // Find document - MODIFIED TO BE MORE FLEXIBLE FOR PRIVACY DEMO
-        let document = documents.find(doc => doc.id === documentId && doc.clientIP === clientIP);
-        
-        // Special handling for privacy policy demo - allow chat even if IP doesn't match
-        if (!document) {
-            document = documents.find(doc => 
-                doc.id === documentId && 
-                doc.filename === 'Morpha_Privacy_Policy.pdf'
-            );
-            
-            if (document) {
-                console.log('Privacy policy demo document found, allowing chat despite IP mismatch');
-            }
-        }
+        // Find document - MODIFIED TO BE MORE FLEXIBLE
+        let document = documents.find(doc => doc.id === documentId);
         
         if (!document) {
-            console.log('Document not found. Looking for:', documentId);
-            console.log('Client IP:', clientIP);
-            console.log('Available documents:', documents.map(d => ({
-                id: d.id,
-                filename: d.filename,
-                clientIP: d.clientIP
-            })));
+            console.log('Document not found:', {
+                requestedId: documentId,
+                availableDocuments: documents.map(d => ({ id: d.id, filename: d.filename })),
+                totalDocs: documents.length
+            });
             
             return res.status(404).json({ 
-                error: 'Document not found. Please upload a new document.',
-                debug: {
-                    requestedId: documentId,
-                    clientIP: clientIP,
-                    availableCount: documents.length
-                }
+                error: 'Document not found. Please upload a new document.'
+            });
+        }
+        
+        // Log document info for debugging
+        console.log('Document found:', {
+            id: document.id,
+            filename: document.filename,
+            hasExtractedText: !!document.extractedText,
+            textLength: document.extractedText?.length || 0
+        });
+
+        // Check if we have text to analyze
+        if (!document.extractedText || document.extractedText.length < 10) {
+            return res.status(400).json({ 
+                error: 'Document text is missing or too short to analyze.'
             });
         }
 
@@ -741,8 +739,8 @@ app.post('/chat', chatLimiter, async (req, res) => {
 You are a legal contract expert helping a consumer understand their contract.
 
 Contract Summary:
-- Type: ${document.analysis.documentType}
-- Summary: ${document.analysis.summary}
+- Type: ${document.analysis?.documentType || 'Unknown'}
+- Summary: ${document.analysis?.summary || 'No summary available'}
 
 User Question: ${sanitizedMessage}
 
@@ -753,6 +751,8 @@ Provide a helpful, clear answer in plain English. Be specific and reference the 
 Keep your response under 300 words.
 `;
 
+        console.log('Sending request to OpenAI...');
+        
         const response = await openai.chat.completions.create({
             model: "gpt-4",
             messages: [{ role: "user", content: chatPrompt }],
@@ -784,6 +784,12 @@ Keep your response under 300 words.
         });
 
     } catch (error) {
+        console.error('Chat error full details:', {
+            message: error.message,
+            stack: error.stack,
+            documentId: req.body?.documentId
+        });
+        
         logError(error, { 
             endpoint: '/chat',
             ip: req.ip,
@@ -791,8 +797,16 @@ Keep your response under 300 words.
             messageLength: req.body?.message?.length,
             step: 'chat-processing'
         });
-        console.error('Chat error:', error);
-        res.status(500).json({ error: 'Failed to process chat: ' + error.message });
+        
+        // Send more specific error message
+        let errorMessage = 'Failed to process chat.';
+        if (error.message?.includes('API')) {
+            errorMessage = 'AI service temporarily unavailable. Please try again.';
+        } else if (error.message?.includes('rate')) {
+            errorMessage = 'Too many requests. Please wait a moment.';
+        }
+        
+        res.status(500).json({ error: errorMessage });
     }
 });
 
