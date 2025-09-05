@@ -717,7 +717,7 @@ app.post('/chat', chatLimiter, async (req, res) => {
             return res.status(400).json({ error: 'Message too long. Please keep it under 500 characters.' });
         }
 
-        // Find document - MODIFIED TO BE MORE FLEXIBLE
+        // Find document
         let document = documents.find(doc => doc.id === documentId);
         
         if (!document) {
@@ -727,22 +727,14 @@ app.post('/chat', chatLimiter, async (req, res) => {
                 totalDocs: documents.length
             });
             
-            return res.status(404).json({ 
+            return res.status(404).json({
                 error: 'Document not found. Please upload a new document.'
             });
         }
         
-        // Log document info for debugging
-        console.log('Document found:', {
-            id: document.id,
-            filename: document.filename,
-            hasExtractedText: !!document.extractedText,
-            textLength: document.extractedText?.length || 0
-        });
-
         // Check if we have text to analyze
         if (!document.extractedText || document.extractedText.length < 10) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: 'Document text is missing or too short to analyze.'
             });
         }
@@ -802,7 +794,7 @@ Keep your response under 300 words.
             documentId: req.body?.documentId
         });
         
-        logError(error, { 
+        logError(error, {
             endpoint: '/chat',
             ip: req.ip,
             documentId: req.body?.documentId,

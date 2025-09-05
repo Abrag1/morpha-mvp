@@ -1610,8 +1610,8 @@ function updateCategoryCount(documentType) {
             ).join('');
             
             container.innerHTML = `
-                <div class="suggestions-title">See what experts usually ask:</div>
-                ${questionsHtml}
+            <div class="suggestions-title">Useful questions to explore the document further:</div>
+            ${questionsHtml}
             `;
 
             // Also add click event listeners as backup
@@ -1630,7 +1630,7 @@ function updateCategoryCount(documentType) {
         // Add fallback suggestions if API fails
         const container = document.getElementById('suggestedQuestions');
         container.innerHTML = `
-            <div class="suggestions-title">See what experts usually ask:</div>
+            <div class="suggestions-title">Useful questions to explore the document further:</div>
             <button class="suggestion-btn" onclick="window.askQuestion('What are the most important terms I should know?')">What are the most important terms I should know?</button>
             <button class="suggestion-btn" onclick="window.askQuestion('Are there any red flags in this contract?')">Are there any red flags in this contract?</button>
             <button class="suggestion-btn" onclick="window.askQuestion('What are my main obligations?')">What are my main obligations?</button>
