@@ -1688,12 +1688,7 @@ function updateCategoryCount(documentType) {
             })
         });
 
-         if (result.success && result.response) {
-            addMessage(result.response, 'ai');
-            // Track chat usage
-            trackAction('used_chat');
-        }
-
+         
         console.log('Response status:', response.status);
         
         // Remove typing indicator
