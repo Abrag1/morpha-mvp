@@ -756,26 +756,18 @@ Keep your response under 300 words.
 `;
 
         console.log('Sending request to OpenAI...');
-console.log('Document text length:', document.extractedText.length);
-console.log('API key present:', !!process.env.OPENAI_API_KEY);
-console.log('API key starts with:', process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) + '...' : 'MISSING');
+        
+        const openaiResponse = await openai.chat.completions.create({
+            model: "gpt-4",
+            messages: [{ role: "user", content: chatPrompt }],
+            temperature: 0.3,
+            max_tokens: 500
+        });
 
-console.log('Sending request to OpenAI...');
-console.log('Document text length:', document.extractedText.length);
-console.log('API key present:', !!process.env.OPENAI_API_KEY);
-
-const response = await openai.chat.completions.create({
-    model: "gpt-4",
-    messages: [{ role: "user", content: chatPrompt }],
-    temperature: 0.3,
-    max_tokens: 500
-});
-
-console.log('OpenAI response received successfully');
-console.log('Response has choices:', !!response.choices?.[0]);
+        console.log('OpenAI response received successfully');
 
         // Track usage
-        const tokensUsed = response.usage?.total_tokens || 0;
+        const tokensUsed = openaiResponse.usage?.total_tokens || 0;
         trackUsage('chat', tokensUsed);
         session.chatCount++;
 
@@ -784,16 +776,22 @@ console.log('Response has choices:', !!response.choices?.[0]);
             documentId: documentId,
             clientIP: clientIP,
             userMessage: sanitizedMessage,
-            aiResponse: response.choices[0].message.content,
+            aiResponse: openaiResponse.choices[0].message.content,
             timestamp: new Date(),
             tokensUsed: tokensUsed
         };
 
         conversations.push(chatResponse);
 
+        console.log('Sending response to frontend:', {
+            success: true,
+            responseLength: openaiResponse.choices[0].message.content?.length,
+            hasResponse: !!openaiResponse.choices[0].message.content
+        });
+
         res.json({
             success: true,
-            response: response.choices[0].message.content,
+            response: openaiResponse.choices[0].message.content,
             tokensUsed: tokensUsed
         });
 
