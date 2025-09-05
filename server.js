@@ -760,24 +760,19 @@ console.log('Document text length:', document.extractedText.length);
 console.log('API key present:', !!process.env.OPENAI_API_KEY);
 console.log('API key starts with:', process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 10) + '...' : 'MISSING');
 
-try {
-    const response = await openai.chat.completions.create({
-        model: "gpt-4",
-        messages: [{ role: "user", content: chatPrompt }],
-        temperature: 0.3,
-        max_tokens: 500
-    });
-    console.log('OpenAI response received successfully');
-    console.log('Response has choices:', !!response.choices?.[0]);
-} catch (openaiError) {
-    console.error('OpenAI API Error Details:', {
-        message: openaiError.message,
-        status: openaiError.status,
-        code: openaiError.code,
-        type: openaiError.type
-    });
-    throw openaiError;
-}
+console.log('Sending request to OpenAI...');
+console.log('Document text length:', document.extractedText.length);
+console.log('API key present:', !!process.env.OPENAI_API_KEY);
+
+const response = await openai.chat.completions.create({
+    model: "gpt-4",
+    messages: [{ role: "user", content: chatPrompt }],
+    temperature: 0.3,
+    max_tokens: 500
+});
+
+console.log('OpenAI response received successfully');
+console.log('Response has choices:', !!response.choices?.[0]);
 
         // Track usage
         const tokensUsed = response.usage?.total_tokens || 0;
