@@ -919,33 +919,41 @@ app.get('/pdf/:documentId', (req, res) => {
     }
 
     // Special handling for privacy policy demo
-    if (document.filename === 'Morpha_Privacy_Policy.pdf') {
-        // Create a simple HTML page showing the privacy policy text
-        const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                    padding: 20px;
-                    line-height: 1.6;
-                    max-width: 800px;
-                    margin: 0 auto;
-                }
-                h1 { color: #667eea; }
-                h2 { color: #4a5568; margin-top: 20px; }
-            </style>
-        </head>
-        <body>
-            <h1>Morpha Privacy Policy</h1>
-            <pre style="white-space: pre-wrap; font-family: inherit;">${document.extractedText}</pre>
-        </body>
-        </html>`;
-        
-        res.setHeader('Content-Type', 'text/html');
-        return res.send(htmlContent);
-    }
+if (document.filename === 'Morpha_Privacy_Policy.pdf') {
+    // Return the updated privacy policy HTML
+    const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                padding: 20px;
+                line-height: 1.6;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            [data-custom-class='title'], [data-custom-class='title'] * {
+                font-family: Arial !important;
+                font-size: 26px !important;
+                color: #000000 !important;
+            }
+            [data-custom-class='body_text'], [data-custom-class='body_text'] * {
+                color: #595959 !important;
+                font-size: 14px !important;
+                font-family: Arial !important;
+            }
+            /* Add other styles as needed */
+        </style>
+    </head>
+    <body>
+        ${document.extractedText}
+    </body>
+    </html>`;
+    
+    res.setHeader('Content-Type', 'text/html');
+    return res.send(htmlContent);
+}
 
     // Regular PDF handling
     if (!document.pdfPath) {
