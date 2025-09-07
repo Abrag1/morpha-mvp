@@ -853,6 +853,64 @@ Keep your response under 200 words but make it visually easy to scan.
 });
 
 
+// Feedback submission endpoint
+app.post('/feedback', express.json(), async (req, res) => {
+    try {
+        const { type, message, userEmail, currentPage, timestamp } = req.body;
+        
+        // Validate required fields
+        if (!type || !message) {
+            return res.status(400).json({ error: 'Feedback type and message are required' });
+        }
+
+        // Sanitize inputs
+        const sanitizedData = {
+            type: sanitizeInput(type),
+            message: sanitizeInput(message),
+            userEmail: userEmail ? sanitizeInput(userEmail) : 'Not provided',
+            currentPage: sanitizeInput(currentPage),
+            timestamp: timestamp,
+            clientIP: req.ip
+        };
+
+        // Create email content
+        const emailSubject = `Morpha Feedback: ${sanitizedData.type}`;
+        const emailBody = `
+New feedback received from Morpha MVP:
+
+Type: ${sanitizedData.type}
+Timestamp: ${sanitizedData.timestamp}
+Page: ${sanitizedData.currentPage}
+User Email: ${sanitizedData.userEmail}
+User IP: ${sanitizedData.clientIP}
+
+Message:
+${sanitizedData.message}
+
+---
+This feedback was sent via the Morpha MVP feedback system.
+        `;
+
+        // Log the feedback (for now we'll log it, then add email sending)
+        console.log('FEEDBACK RECEIVED:');
+        console.log('Subject:', emailSubject);
+        console.log('Body:', emailBody);
+
+        // For now, we'll just log it. Next we'll add actual email sending.
+        
+        res.json({ 
+            success: true, 
+            message: 'Feedback received successfully' 
+        });
+
+    } catch (error) {
+        console.error('Feedback submission error:', error);
+        res.status(500).json({ error: 'Failed to submit feedback' });
+    }
+});
+
+
+
 // Tracking endpoint - session-based, no personal data
 app.post('/track', express.json(), (req, res) => {
     const { session_id, event } = req.body;
