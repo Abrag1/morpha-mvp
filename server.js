@@ -609,8 +609,9 @@ Provide analysis in JSON format:
         const analysis = await openai.chat.completions.create({
             model: "gpt-4",
             messages: [{ role: "user", content: analysisPrompt }],
-            temperature: 0.3,
-            max_tokens: 1000
+            temperature: 0.1,
+            max_tokens: 1000,
+            seed: 12345
         });
 
         // Track usage
