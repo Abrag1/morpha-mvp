@@ -1823,14 +1823,18 @@ function addMessage(content, sender) {
     }
     
     if (sender === 'ai') {
+    console.log('AI message detected, applying formatting');
+    console.log('Original content:', content);
     const formattedContent = content
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/- \*\*(.*?)\*\*:/g, '<br>• <strong>$1</strong>:')
-        .replace(/- ([^*\n])/g, '<br>• $1')
+        .replace(/- \*\*([^*]+)\*\*:/g, '<br>• <strong>$1</strong>:')
+        .replace(/^- /gm, '• ')
         .replace(/\n\n/g, '</p><p>')
         .replace(/\n/g, '<br>');
+    console.log('Formatted content:', formattedContent);
     messageDiv.innerHTML = `<div class="${messageClass}"><p>${formattedContent}</p></div>`;
 } else {
+    console.log('Non-AI message, sender:', sender);
     messageDiv.innerHTML = `<div class="${messageClass}">${content}</div>`;
 }
     chatMessages.appendChild(messageDiv);
