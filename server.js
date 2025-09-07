@@ -586,7 +586,13 @@ PRIVACY POLICY SPECIFIC GUIDANCE:
 - GOOD clauses that should NOT be flagged: GDPR compliance, user rights explanations, contact information for privacy questions, data minimization statements, encryption usage, clear retention limits
 - BAD clauses to flag: Vague data sharing, unclear retention, broad collection permissions, weak security language, difficult opt-out processes
 
+PRIVACY POLICY ASSESSMENT PRIORITY:
+- If document shows: minimal data collection, no selling/sharing of user data, short retention periods (24 hours to 2 weeks), encryption mentioned, user control over data, explicit "we don't sell your data" statements → LEAN TOWARD LOW RISK
+- Only rate MEDIUM if there are genuine concerning practices like broad data sharing, indefinite retention, or weak security
+- Rate HIGH only for clearly problematic policies with data selling, tracking, or poor security
+
 RISK FACTOR WEIGHTING (Most to Least Important):
+0. Privacy practices (for User Agreements) - data minimization and user control (highest weight for privacy policies)
 1. Payment/Financial terms (highest weight)
 2. Termination/Exit clauses
 3. Liability/Legal exposure  
