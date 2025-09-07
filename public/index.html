@@ -813,6 +813,113 @@
     margin: 10px 0;
     font-style: italic;
 }
+
+/* Feedback Modal Styles */
+.modal {
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: white;
+    border-radius: 12px;
+    padding: 0;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.close {
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+}
+
+.close:hover {
+    color: #333;
+}
+
+.modal-body {
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group select,
+.form-group textarea,
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-primary:hover {
+    background: #5a6fd8;
+}
+
+.btn-primary:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
 </style>
 
 
@@ -2155,6 +2262,115 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 500);
 });
 
+// Feedback functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const feedbackBtn = document.getElementById('feedbackBtn');
+    const feedbackModal = document.getElementById('feedbackModal');
+    const closeFeedback = document.getElementById('closeFeedback');
+    const cancelFeedback = document.getElementById('cancelFeedback');
+    const feedbackForm = document.getElementById('feedbackForm');
+
+    if (feedbackBtn && feedbackModal) {
+        // Open feedback modal
+        feedbackBtn.addEventListener('click', () => {
+            feedbackModal.style.display = 'flex';
+        });
+
+        // Close feedback modal
+        function closeFeedbackModal() {
+            feedbackModal.style.display = 'none';
+            feedbackForm.reset();
+        }
+
+        closeFeedback.addEventListener('click', closeFeedbackModal);
+        cancelFeedback.addEventListener('click', closeFeedbackModal);
+
+        // Close modal when clicking outside
+        feedbackModal.addEventListener('click', (e) => {
+            if (e.target === feedbackModal) {
+                closeFeedbackModal();
+            }
+        });
+
+        // Handle form submission
+        feedbackForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = feedbackForm.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+
+            const formData = {
+                type: document.getElementById('feedbackType').value,
+                message: document.getElementById('feedbackMessage').value,
+                userEmail: document.getElementById('userEmail').value,
+                currentPage: window.location.href,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                const response = await fetch('/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Thank you for your feedback! We\'ll review it soon.');
+                    closeFeedbackModal();
+                } else {
+                    throw new Error(result.error || 'Failed to send feedback');
+                }
+            } catch (error) {
+                console.error('Feedback error:', error);
+                alert('Failed to send feedback. Please try again or email us directly at support@getmorpha.com');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Send Feedback';
+            }
+        });
+    }
+});
+
+<!-- Feedback Modal -->
+<div id="feedbackModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Share Your Feedback</h3>
+            <span class="close" id="closeFeedback">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="feedbackForm">
+                <div class="form-group">
+                    <label for="feedbackType">What type of feedback?</label>
+                    <select id="feedbackType" required>
+                        <option value="">Select type...</option>
+                        <option value="bug">Bug Report</option>
+                        <option value="feature">Feature Request</option>
+                        <option value="general">General Feedback</option>
+                        <option value="complaint">Issue/Complaint</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="feedbackMessage">Your feedback:</label>
+                    <textarea id="feedbackMessage" rows="6" placeholder="Tell us what you think..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="userEmail">Your email (optional):</label>
+                    <input type="email" id="userEmail" placeholder="your@email.com" />
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="cancelFeedback" class="btn-secondary">Cancel</button>
+                    <button type="submit" class="btn-primary">Send Feedback</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
     </script>
 </body>
