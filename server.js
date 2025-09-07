@@ -563,10 +563,28 @@ MEDIUM RISK: 2-5 year period, reasonably defined confidential info, standard pen
 LOW RISK: Limited time period (≤2 years), narrowly defined confidential info, reasonable penalties, mutual protection, clear public info exclusions
 
 FOR USER AGREEMENTS:
-HIGH RISK: Indefinite/undefined data retention, tracking across third-party sites/shadow profiling, broad/unclear third-party data sharing, provider can unilaterally change terms without notice, no right to delete account/data, forced arbitration/waiver of class action rights, ability to read private communications
-MEDIUM RISK: First-party cookies/local storage for functionality, limited logging (30 days), content removal for vague ToS violations, minimum age gate ("13+"), standard compliance with legal requests
-LOW RISK: Minimal purpose-specific data collection, no selling/brokering of user data, clear opt-in for third-party sharing, easy account deletion with retention limits, transparent language about data use, encryption and security best practices, content ownership stays with user, anonymous/guest use allowed
+HIGH RISK: 
+- Data Collection: Indefinite data retention, broad "any information" collection, tracking across third-party sites, shadow profiling, collecting sensitive data without clear need
+- Data Sharing: Selling user data, sharing with "partners" without specifics, broad third-party sharing without consent, data brokers mentioned
+- User Rights: No right to delete account/data, cannot opt out of data collection, forced arbitration/class action waiver, unilateral terms changes without notice
+- Security: No encryption mentioned, weak security practices, data stored indefinitely
+- Specific Red Flags: "We may collect any information," "share with business partners," "retain data indefinitely," "cannot guarantee security"
+MEDIUM RISK: 
+- Data Collection: Standard web analytics, first-party cookies for functionality, limited logging (30+ days), email addresses for service delivery
+- Data Sharing: Sharing with service providers under contract, compliance with legal requests, anonymized data sharing
+- User Rights: Basic account deletion, some opt-out options, standard dispute resolution, terms changes with notice
+- Security: Standard security measures mentioned, reasonable retention periods
+- Typical Clauses: Age gates (13+), cookie notifications, basic privacy controls
+LOW RISK: 
+- Data Collection: Minimal purpose-specific collection, clear data minimization, session-only storage, no tracking cookies
+- Data Sharing: No selling/brokering, explicit opt-in for any sharing, transparent about all third parties
+- User Rights: Easy account deletion, comprehensive privacy controls, data portability, clear consent mechanisms  
+- Security: End-to-end encryption, security best practices detailed, regular security audits mentioned
+- Best Practices: "We don't sell your data," "delete anytime," "minimal collection," "transparent practices"
 
+PRIVACY POLICY SPECIFIC GUIDANCE:
+- GOOD clauses that should NOT be flagged: GDPR compliance, user rights explanations, contact information for privacy questions, data minimization statements, encryption usage, clear retention limits
+- BAD clauses to flag: Vague data sharing, unclear retention, broad collection permissions, weak security language, difficult opt-out processes
 
 RISK FACTOR WEIGHTING (Most to Least Important):
 1. Payment/Financial terms (highest weight)
