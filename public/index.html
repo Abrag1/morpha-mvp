@@ -1892,20 +1892,20 @@ function startCooldownTimer(seconds) {
 
     // Add message to chat
     // Enhanced addMessage function with error styling
-function addMessage(content, sender) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${sender}`;
+//function addMessage(content, sender) {
+  //  const messageDiv = document.createElement('div');
+    //messageDiv.className = `message ${sender}`;
     
     // Special styling for error messages
-    let messageClass = 'message-content';
-    if (sender.includes('error')) {
-        messageClass += ' error-message';
-    }
+    //let messageClass = 'message-content';
+    //if (sender.includes('error')) {
+        //messageClass += ' error-message';
+    //}
     
-    messageDiv.innerHTML = `<div class="${messageClass}">${content}</div>`;
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
+    //messageDiv.innerHTML = `<div class="${messageClass}">${content}</div>`;
+    //chatMessages.appendChild(messageDiv);
+    //chatMessages.scrollTop = chatMessages.scrollHeight;
+//}
     // Load PDF viewer
     function loadPDFViewer() {
         if (!currentDocumentId) return;
