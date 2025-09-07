@@ -1049,12 +1049,25 @@ app.get('/pdf/:documentId', (req, res) => {
             </div>
             <div class="section">
                 ${document.extractedText
-                    .replace(/\n\n/g, '</p><p>')
-                    .replace(/\n/g, '<br>')
-                    .replace(/# ([^\n]+)/g, '<h2>$1</h2>')
-                    .replace(/## ([^\n]+)/g, '<h3>$1</h3>')
-                    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-                }
+    .split('\n\n')
+    .map(paragraph => {
+        if (paragraph.trim() === '') return '';
+        if (paragraph.startsWith('# ')) {
+            return `<h2>${paragraph.substring(2)}</h2>`;
+        }
+        if (paragraph.startsWith('## ')) {
+            return `<h3>${paragraph.substring(3)}</h3>`;
+        }
+        if (paragraph.startsWith('- ') || paragraph.includes('\n- ')) {
+            const items = paragraph.split('\n').filter(line => line.trim())
+                .map(line => line.startsWith('- ') ? `<li>${line.substring(2)}</li>` : `<li>${line}</li>`)
+                .join('');
+            return `<ul>${items}</ul>`;
+        }
+        return `<p>${paragraph.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</p>`;
+    })
+    .join('')
+}
             </div>
         </div>
     </body>
