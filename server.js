@@ -994,7 +994,7 @@ app.get('/documents', (req, res) => {
 
 // Serve legal pages
 app.get('/privacy', (req, res) => {
-    const privacyPath = path.join(__dirname, 'public', 'privacy.html');
+    const privacyPath = path.join(__dirname, 'public', 'Privacy.html');
     console.log('Serving privacy policy from:', privacyPath);
     res.sendFile(privacyPath);
 });
