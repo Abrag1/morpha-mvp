@@ -770,8 +770,19 @@ User Question: ${sanitizedMessage}
 Contract Text (first 3000 chars):
 ${document.extractedText.substring(0, 3000)}
 
-Provide a helpful, clear answer in plain English. Be specific and reference the contract when possible.
-Keep your response under 300 words.
+RESPONSE FORMAT REQUIREMENTS:
+- Use clear paragraph breaks between different points
+- Make the text easily identifieble with bulletpoints or other clear strucural formatting
+- Start with a direct answer to their question
+- Use bullet points for lists or multiple items
+- Use **bold text** for key terms or important points
+- Keep sentences concise and scannable
+- Reference specific contract sections when possible
+- End with actionable advice if relevant
+
+Provide a helpful, clear answer in plain English using the structured format above. Be specific and reference the contract when possible.
+
+Keep your response under 200 words but make it visually easy to scan.
 `;
 
         console.log('Sending request to OpenAI...');
