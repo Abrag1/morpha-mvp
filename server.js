@@ -771,16 +771,16 @@ Contract Text (first 3000 chars):
 ${document.extractedText.substring(0, 3000)}
 
 RESPONSE FORMAT REQUIREMENTS:
+- Answer the question directly and naturally (no "Direct Answer:" labels)
 - Use clear paragraph breaks between different points
-- Make the text easily identifieble with bulletpoints or other clear strucural formatting
-- Start with a direct answer to their question
-- Use bullet points for lists or multiple items
+- Use bullet points for lists or multiple items  
 - Use **bold text** for key terms or important points
 - Keep sentences concise and scannable
 - Reference specific contract sections when possible
 - End with actionable advice if relevant
+- Write in a conversational, helpful tone
 
-Provide a helpful, clear answer in plain English using the structured format above. Be specific and reference the contract when possible.
+Provide a helpful, clear answer in plain English. Use the formatting guidelines above but write naturally without rigid labels or prefixes. Be specific and reference the contract when possible.
 
 Keep your response under 200 words but make it visually easy to scan.
 `;
