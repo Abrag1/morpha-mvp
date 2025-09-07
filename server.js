@@ -922,29 +922,143 @@ app.get('/pdf/:documentId', (req, res) => {
     if (document.filename === 'Morpha_Privacy_Policy.pdf') {
         // Return the privacy policy as HTML for better viewing
         const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {
-                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                    padding: 20px;
-                    line-height: 1.6;
-                    max-width: 800px;
-                    margin: 0 auto;
-                    color: #333;
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Privacy Policy - Morpha</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+           
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                background-color: #f8f9fa;
+            }
+           
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: white;
+                box-shadow: 0 0 20px rgba(0,0,0,0.1);
+                border-radius: 8px;
+                margin-top: 20px;
+                margin-bottom: 40px;
+            }
+           
+            .header {
+                text-align: center;
+                border-bottom: 3px solid #007bff;
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }
+           
+            .header h1 {
+                color: #007bff;
+                font-size: 2.5em;
+                margin-bottom: 10px;
+            }
+           
+            .last-updated {
+                background-color: #e9ecef;
+                padding: 10px;
+                border-radius: 5px;
+                margin-bottom: 30px;
+                text-align: center;
+                font-weight: 600;
+            }
+           
+            h1 {
+                color: #007bff;
+                margin-bottom: 20px;
+                font-size: 2em;
+            }
+           
+            h2 {
+                color: #495057;
+                margin-top: 40px;
+                margin-bottom: 20px;
+                font-size: 1.4em;
+                border-left: 4px solid #007bff;
+                padding-left: 15px;
+            }
+           
+            h3 {
+                color: #6c757d;
+                margin-top: 25px;
+                margin-bottom: 15px;
+            }
+           
+            p {
+                margin-bottom: 15px;
+                text-align: justify;
+            }
+           
+            ul, ol {
+                margin-left: 20px;
+                margin-bottom: 15px;
+            }
+           
+            li {
+                margin-bottom: 8px;
+            }
+           
+            .summary-box {
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                padding: 25px;
+                margin: 25px 0;
+            }
+           
+            .summary-box h2 {
+                margin-top: 0;
+                color: #007bff;
+            }
+           
+            .section {
+                margin-bottom: 40px;
+                scroll-margin-top: 20px;
+            }
+           
+            a {
+                color: #007bff;
+                text-decoration: none;
+            }
+           
+            a:hover {
+                text-decoration: underline;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Privacy Policy</h1>
+                <p><strong>Morpha</strong></p>
+            </div>
+            <div class="last-updated">
+                Last updated: September 06, 2025
+            </div>
+            <div class="section">
+                ${document.extractedText
+                    .replace(/\n\n/g, '</p><p>')
+                    .replace(/\n/g, '<br>')
+                    .replace(/# ([^\n]+)/g, '<h2>$1</h2>')
+                    .replace(/## ([^\n]+)/g, '<h3>$1</h3>')
+                    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
                 }
-                h1, h2 { color: #007bff; margin-top: 30px; }
-                h3 { color: #495057; margin-top: 20px; }
-                .section { margin-bottom: 25px; }
-                ul { margin-left: 20px; }
-                li { margin-bottom: 8px; }
-            </style>
-        </head>
-        <body>
-            ${document.extractedText.replace(/\n/g, '<br>').replace(/# /g, '<h2>').replace(/## /g, '<h3>')}
-        </body>
-        </html>`;
+            </div>
+        </div>
+    </body>
+    </html>`;
        
         res.setHeader('Content-Type', 'text/html');
         return res.send(htmlContent);
