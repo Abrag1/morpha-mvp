@@ -1825,8 +1825,9 @@ function addMessage(content, sender) {
     if (sender === 'ai') {
     const formattedContent = content
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/- \*\*(.*?)\*\*:/g, '<br>• <strong>$1</strong>:')
+        .replace(/- ([^*\n])/g, '<br>• $1')
         .replace(/\n\n/g, '</p><p>')
-        .replace(/\n- /g, '<br>• ')
         .replace(/\n/g, '<br>');
     messageDiv.innerHTML = `<div class="${messageClass}"><p>${formattedContent}</p></div>`;
 } else {
