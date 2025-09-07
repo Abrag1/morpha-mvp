@@ -2261,8 +2261,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 500);
 
-// Feedback functionality
-document.addEventListener('DOMContentLoaded', function() {
+    // Feedback functionality - MOVED INSIDE THE SAME BLOCK
     const feedbackBtn = document.getElementById('feedbackBtn');
     const feedbackModal = document.getElementById('feedbackModal');
     const closeFeedback = document.getElementById('closeFeedback');
@@ -2272,6 +2271,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (feedbackBtn && feedbackModal) {
         // Open feedback modal
         feedbackBtn.addEventListener('click', () => {
+            console.log('Feedback button clicked!'); // Debug line
             feedbackModal.style.display = 'flex';
         });
 
@@ -2332,12 +2332,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.textContent = 'Send Feedback';
             }
         });
+    } else {
+        console.log('Feedback elements not found:', {feedbackBtn, feedbackModal}); // Debug line
     }
 });
-
-});
-
-    </script>
 
 <!-- Feedback Modal -->
 <div id="feedbackModal" class="modal" style="display: none;">
