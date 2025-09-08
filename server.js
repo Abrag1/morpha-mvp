@@ -38,6 +38,87 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
 
+// New code for custom logging in Railway
+const LOG_LEVEL = process.env.LOG_LEVEL || 'info';
+const ENABLE_IP_LOGGING = process.env.ENABLE_IP_LOGGING === 'true';
+const ENABLE_USER_DATA_LOGGING = process.env.ENABLE_USER_DATA_LOGGING === 'true';
+
+const logger = {
+    error: (message, data = {}) => {
+        if (['error', 'warn', 'info', 'debug'].includes(LOG_LEVEL)) {
+            console.error(JSON.stringify({
+                level: 'error',
+                message: sanitizeLogData(message),
+                timestamp: new Date().toISOString(),
+                data: sanitizeLogData(data)
+            }));
+        }
+    },
+    
+    warn: (message, data = {}) => {
+        if (['warn', 'info', 'debug'].includes(LOG_LEVEL)) {
+            console.warn(JSON.stringify({
+                level: 'warn',
+                message: sanitizeLogData(message),
+                timestamp: new Date().toISOString(),
+                data: sanitizeLogData(data)
+            }));
+        }
+    },
+    
+    info: (message, data = {}) => {
+        if (['info', 'debug'].includes(LOG_LEVEL)) {
+            console.log(JSON.stringify({
+                level: 'info',
+                message: sanitizeLogData(message),
+                timestamp: new Date().toISOString(),
+                data: sanitizeLogData(data)
+            }));
+        }
+    },
+    
+    debug: (message, data = {}) => {
+        if (LOG_LEVEL === 'debug') {
+            console.log(JSON.stringify({
+                level: 'debug',
+                message: sanitizeLogData(message),
+                timestamp: new Date().toISOString(),
+                data: sanitizeLogData(data)
+            }));
+        }
+    }
+};
+
+function sanitizeLogData(data) {
+    if (typeof data === 'string') return data;
+    if (!data || typeof data !== 'object') return data;
+    
+    const sanitized = { ...data };
+    
+    const sensitiveFields = ['password', 'token', 'apiKey', 'secret', 'auth'];
+    sensitiveFields.forEach(field => {
+        if (sanitized[field]) {
+            sanitized[field] = '[REDACTED]';
+        }
+    });
+    
+    if (!ENABLE_IP_LOGGING && sanitized.ip) {
+        sanitized.ip = '[REDACTED]';
+    }
+    if (!ENABLE_IP_LOGGING && sanitized.clientIP) {
+        sanitized.clientIP = '[REDACTED]';
+    }
+    
+    if (!ENABLE_USER_DATA_LOGGING) {
+        if (sanitized.email) sanitized.email = '[REDACTED]';
+        if (sanitized.userId) sanitized.userId = '[REDACTED]';
+        if (sanitized.filename) sanitized.filename = '[REDACTED]';
+        if (sanitized.originalname) sanitized.originalname = '[REDACTED]';
+    }
+    
+    return sanitized;
+}
+
 // Rate limiting configurations
 const uploadLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -460,7 +541,10 @@ app.post('/upload', uploadLimiter, upload.single('document'), async (req, res) =
             return res.status(400).json({ error: 'No file uploaded' });
         }
 
-        console.log('File uploaded:', req.file.originalname, 'by IP:', clientIP);
+        logger.info('File uploaded successfully', { 
+            filename: req.file.originalname, 
+            clientIP: clientIP 
+        });
         
         // Extract text from PDF with better error handling
 let extractedText = '';
@@ -690,7 +774,7 @@ Provide analysis in JSON format:
         filename: req.file?.originalname,
         step: 'general-upload'
     });
-    console.error('Upload error:', error);
+    logger.error('Upload error occurred', { error: error.message });
         
         // Clean up file if it exists
         if (req.file && fs.existsSync(req.file.path)) {
@@ -719,7 +803,11 @@ app.post('/chat', chatLimiter, async (req, res) => {
         
         const { documentId, message } = req.body;
         
-        console.log('Chat request:', { documentId, messageLength: message?.length, clientIP });
+        logger.info('Chat request received', { 
+            documentId: documentId, 
+            messageLength: message?.length, 
+            clientIP: clientIP 
+        });
         
         if (!documentId || !message) {
             return res.status(400).json({ error: 'Document ID and message are required' });
