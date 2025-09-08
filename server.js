@@ -422,79 +422,215 @@ app.get('/admin/stats', (req, res) => {
     if (!token || token !== process.env.ADMIN_SECRET) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
-    
-    // Calculate metrics
-    const metricsReport = {
-        usage: usageStats,
-        activeSessions: sessions.size,
-        totalDocuments: documents.length,
-        metrics: {
-            today: {},
-            last_7_days: {},
-            last_14_days: {}
-        }
-    };
-    
-    // Today's metrics
+
+    // Calculate metrics with explanations
     const today = new Date().toISOString().split('T')[0];
-    if (sessionMetrics.daily[today]) {
-        const td = sessionMetrics.daily[today];
-        metricsReport.metrics.today = {
-            visitors: td.total_visitors,
-            upload_conversion: td.total_visitors > 0 
-                ? ((td.sessions_with_upload.size / td.total_visitors) * 100).toFixed(1) + '%'
-                : '0%',
-            multi_action_rate: td.total_visitors > 0
-                ? ((td.sessions_with_multiple_actions.size / td.total_visitors) * 100).toFixed(1) + '%'
-                : '0%',
-            total_uploads: td.personal_uploads,
-            action_breakdown: td.action_counts
-        };
-    }
-    
-    // Calculate 7-day and 14-day aggregates
-    const now = new Date();
-    let visitors7d = 0, uploads7d = new Set(), multiAction7d = new Set();
-    let visitors14d = 0, uploads14d = new Set(), multiAction14d = new Set();
-    
-    Object.entries(sessionMetrics.daily).forEach(([date, data]) => {
-        const dayDiff = Math.floor((now - new Date(date)) / (1000 * 60 * 60 * 24));
-        
-        if (dayDiff <= 7) {
-            visitors7d += data.total_visitors;
-            data.sessions_with_upload.forEach(s => uploads7d.add(s));
-            data.sessions_with_multiple_actions.forEach(s => multiAction7d.add(s));
-        }
-        
-        if (dayDiff <= 14) {
-            visitors14d += data.total_visitors;
-            data.sessions_with_upload.forEach(s => uploads14d.add(s));
-            data.sessions_with_multiple_actions.forEach(s => multiAction14d.add(s));
-        }
-    });
-    
-    metricsReport.metrics.last_7_days = {
-        visitors: visitors7d,
-        upload_conversion: visitors7d > 0 
-            ? ((uploads7d.size / visitors7d) * 100).toFixed(1) + '%'
-            : '0%',
-        multi_action_rate: visitors7d > 0
-            ? ((multiAction7d.size / visitors7d) * 100).toFixed(1) + '%'
-            : '0%'
+    const todayMetrics = sessionMetrics.daily[today] || {
+        total_visitors: 0,
+        personal_uploads: 0,
+        sessions_with_upload: new Set(),
+        sessions_with_multiple_actions: new Set(),
+        action_counts: {}
     };
-    
-    metricsReport.metrics.last_14_days = {
-        visitors: visitors14d,
-        upload_conversion: visitors14d > 0 
-            ? ((uploads14d.size / visitors14d) * 100).toFixed(1) + '%'
-            : '0%',
-        multi_action_rate: visitors14d > 0
-            ? ((multiAction14d.size / visitors14d) * 100).toFixed(1) + '%'
-            : '0%'
+
+    // Create readable dashboard
+    const dashboardData = {
+        overall_performance: {
+            total_documents_uploaded: usageStats.totalUploads,
+            total_chat_conversations: usageStats.totalChats,
+            total_ai_cost: `$${usageStats.estimatedCost.toFixed(2)}`,
+            ai_tokens_used: usageStats.totalTokensUsed
+        },
+        today_snapshot: {
+            visitors_today: todayMetrics.total_visitors,
+            documents_uploaded_today: todayMetrics.personal_uploads,
+            upload_conversion_rate: todayMetrics.total_visitors > 0 
+                ? `${((todayMetrics.sessions_with_upload.size / todayMetrics.total_visitors) * 100).toFixed(1)}%`
+                : '0%',
+            engaged_users_rate: todayMetrics.total_visitors > 0
+                ? `${((todayMetrics.sessions_with_multiple_actions.size / todayMetrics.total_visitors) * 100).toFixed(1)}%`
+                : '0%'
+        },
+        business_insights: {
+            average_cost_per_upload: usageStats.totalUploads > 0 
+                ? `$${(usageStats.estimatedCost / usageStats.totalUploads).toFixed(3)}`
+                : '$0',
+            chat_usage_rate: usageStats.totalUploads > 0
+                ? `${((usageStats.totalChats / usageStats.totalUploads) * 100).toFixed(1)}%`
+                : '0%',
+            active_sessions: sessions.size,
+            documents_in_memory: documents.length
+        },
+        explanations: {
+            upload_conversion_rate: "Percentage of visitors who upload their own documents",
+            engaged_users_rate: "Percentage of visitors who do multiple actions (upload + chat, etc)",
+            chat_usage_rate: "Percentage of uploaded documents that generate chat conversations",
+            average_cost_per_upload: "AI processing cost per document upload"
+        }
     };
-    
-    res.json(metricsReport);
+
+    // Return HTML dashboard instead of JSON
+    const htmlDashboard = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Morpha Admin Dashboard</title>
+        <style>
+            body { 
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                margin: 40px;
+                background: #f8f9fa;
+                color: #333;
+            }
+            .container { max-width: 1200px; margin: 0 auto; }
+            .header { 
+                background: #667eea; 
+                color: white; 
+                padding: 30px; 
+                border-radius: 12px; 
+                margin-bottom: 30px;
+                text-align: center;
+            }
+            .metrics-grid { 
+                display: grid; 
+                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+                gap: 20px; 
+                margin-bottom: 30px;
+            }
+            .metric-card { 
+                background: white; 
+                padding: 25px; 
+                border-radius: 12px; 
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                border-left: 4px solid #667eea;
+            }
+            .metric-title { 
+                font-size: 1.1em; 
+                font-weight: 600; 
+                color: #667eea; 
+                margin-bottom: 15px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .metric-item { 
+                display: flex; 
+                justify-content: space-between; 
+                margin-bottom: 10px; 
+                padding: 8px 0;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            .metric-label { color: #666; }
+            .metric-value { 
+                font-weight: 600; 
+                color: #333;
+                font-size: 1.1em;
+            }
+            .explanation { 
+                background: #f8f9ff; 
+                padding: 20px; 
+                border-radius: 8px; 
+                margin-top: 15px;
+                font-size: 0.9em;
+                color: #666;
+                border-left: 3px solid #667eea;
+            }
+            .refresh-btn {
+                background: #667eea;
+                color: white;
+                border: none;
+                padding: 12px 24px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 600;
+                margin-bottom: 20px;
+            }
+            .refresh-btn:hover { background: #5a6fd8; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Morpha Admin Dashboard</h1>
+                <p>Real-time business metrics and insights</p>
+                <button class="refresh-btn" onclick="window.location.reload()">Refresh Data</button>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-title">Overall Performance</div>
+                    <div class="metric-item">
+                        <span class="metric-label">Total Documents Uploaded</span>
+                        <span class="metric-value">${dashboardData.overall_performance.total_documents_uploaded}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Total Chat Conversations</span>
+                        <span class="metric-value">${dashboardData.overall_performance.total_chat_conversations}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Total AI Cost</span>
+                        <span class="metric-value">${dashboardData.overall_performance.total_ai_cost}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">AI Tokens Used</span>
+                        <span class="metric-value">${dashboardData.overall_performance.ai_tokens_used}</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-title">Today's Activity</div>
+                    <div class="metric-item">
+                        <span class="metric-label">Visitors Today</span>
+                        <span class="metric-value">${dashboardData.today_snapshot.visitors_today}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Documents Uploaded Today</span>
+                        <span class="metric-value">${dashboardData.today_snapshot.documents_uploaded_today}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Upload Conversion Rate</span>
+                        <span class="metric-value">${dashboardData.today_snapshot.upload_conversion_rate}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Engaged Users Rate</span>
+                        <span class="metric-value">${dashboardData.today_snapshot.engaged_users_rate}</span>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-title">Business Insights</div>
+                    <div class="metric-item">
+                        <span class="metric-label">Average Cost Per Upload</span>
+                        <span class="metric-value">${dashboardData.business_insights.average_cost_per_upload}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Chat Usage Rate</span>
+                        <span class="metric-value">${dashboardData.business_insights.chat_usage_rate}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Active Sessions</span>
+                        <span class="metric-value">${dashboardData.business_insights.active_sessions}</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">Documents in Memory</span>
+                        <span class="metric-value">${dashboardData.business_insights.documents_in_memory}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h3>Metric Explanations:</h3>
+                <p><strong>Upload Conversion Rate:</strong> ${dashboardData.explanations.upload_conversion_rate}</p>
+                <p><strong>Engaged Users Rate:</strong> ${dashboardData.explanations.engaged_users_rate}</p>
+                <p><strong>Chat Usage Rate:</strong> ${dashboardData.explanations.chat_usage_rate}</p>
+                <p><strong>Average Cost Per Upload:</strong> ${dashboardData.explanations.average_cost_per_upload}</p>
+            </div>
+        </div>
+    </body>
+    </html>`;
+
+    res.send(htmlDashboard);
 });
+
 
 // Admin endpoint to view errors (protect this!)
 app.get('/admin/errors', (req, res) => {
