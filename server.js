@@ -423,7 +423,7 @@ app.get('/admin/stats', (req, res) => {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Calculate metrics with explanations
+    // Calculate core metrics
     const today = new Date().toISOString().split('T')[0];
     const todayMetrics = sessionMetrics.daily[today] || {
         total_visitors: 0,
@@ -433,202 +433,118 @@ app.get('/admin/stats', (req, res) => {
         action_counts: {}
     };
 
-    // Create readable dashboard
-    const dashboardData = {
-        overall_performance: {
-            total_documents_uploaded: usageStats.totalUploads,
-            total_chat_conversations: usageStats.totalChats,
-            total_ai_cost: `$${usageStats.estimatedCost.toFixed(2)}`,
-            ai_tokens_used: usageStats.totalTokensUsed
-        },
-        today_snapshot: {
-            visitors_today: todayMetrics.total_visitors,
-            documents_uploaded_today: todayMetrics.personal_uploads,
-            upload_conversion_rate: todayMetrics.total_visitors > 0 
-                ? `${((todayMetrics.sessions_with_upload.size / todayMetrics.total_visitors) * 100).toFixed(1)}%`
-                : '0%',
-            engaged_users_rate: todayMetrics.total_visitors > 0
-                ? `${((todayMetrics.sessions_with_multiple_actions.size / todayMetrics.total_visitors) * 100).toFixed(1)}%`
-                : '0%'
-        },
-        business_insights: {
-            average_cost_per_upload: usageStats.totalUploads > 0 
-                ? `$${(usageStats.estimatedCost / usageStats.totalUploads).toFixed(3)}`
-                : '$0',
-            chat_usage_rate: usageStats.totalUploads > 0
-                ? `${((usageStats.totalChats / usageStats.totalUploads) * 100).toFixed(1)}%`
-                : '0%',
-            active_sessions: sessions.size,
-            documents_in_memory: documents.length
-        },
-        explanations: {
-            upload_conversion_rate: "Percentage of visitors who upload their own documents",
-            engaged_users_rate: "Percentage of visitors who do multiple actions (upload + chat, etc)",
-            chat_usage_rate: "Percentage of uploaded documents that generate chat conversations",
-            average_cost_per_upload: "AI processing cost per document upload"
-        }
+    // Count privacy demos vs personal uploads
+    const privacyDemos = usageStats.totalUploads - todayMetrics.personal_uploads;
+    
+    // Count documents with chat activity
+    const documentsWithChat = new Set();
+    conversations.forEach(conv => {
+        documentsWithChat.add(conv.documentId);
+    });
+
+    // Calculate metrics
+    const metrics = {
+        personal_uploads: todayMetrics.personal_uploads,
+        privacy_demos: Math.max(0, usageStats.totalUploads - todayMetrics.personal_uploads),
+        upload_conversion: todayMetrics.total_visitors > 0 
+            ? ((todayMetrics.personal_uploads / todayMetrics.total_visitors) * 100).toFixed(1)
+            : '0.0',
+        chat_adoption: todayMetrics.personal_uploads > 0
+            ? ((documentsWithChat.size / todayMetrics.personal_uploads) * 100).toFixed(1)
+            : '0.0',
+        multi_action: todayMetrics.total_visitors > 0
+            ? ((todayMetrics.sessions_with_multiple_actions.size / todayMetrics.total_visitors) * 100).toFixed(1)
+            : '0.0',
+        active_sessions: sessions.size,
+        documents_in_memory: documents.length
     };
 
-    // Return HTML dashboard instead of JSON
-    const htmlDashboard = `
+    const html = `
     <!DOCTYPE html>
     <html>
     <head>
         <title>Morpha Admin Dashboard</title>
         <style>
-            body { 
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                margin: 40px;
-                background: #f8f9fa;
-                color: #333;
-            }
-            .container { max-width: 1200px; margin: 0 auto; }
-            .header { 
-                background: #667eea; 
-                color: white; 
-                padding: 30px; 
-                border-radius: 12px; 
-                margin-bottom: 30px;
-                text-align: center;
-            }
-            .metrics-grid { 
-                display: grid; 
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-                gap: 20px; 
-                margin-bottom: 30px;
-            }
-            .metric-card { 
-                background: white; 
-                padding: 25px; 
-                border-radius: 12px; 
-                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-                border-left: 4px solid #667eea;
-            }
-            .metric-title { 
-                font-size: 1.1em; 
-                font-weight: 600; 
-                color: #667eea; 
-                margin-bottom: 15px;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-            .metric-item { 
-                display: flex; 
-                justify-content: space-between; 
-                margin-bottom: 10px; 
-                padding: 8px 0;
-                border-bottom: 1px solid #f0f0f0;
-            }
-            .metric-label { color: #666; }
-            .metric-value { 
-                font-weight: 600; 
-                color: #333;
-                font-size: 1.1em;
-            }
-            .explanation { 
-                background: #f8f9ff; 
-                padding: 20px; 
-                border-radius: 8px; 
-                margin-top: 15px;
-                font-size: 0.9em;
-                color: #666;
-                border-left: 3px solid #667eea;
-            }
-            .refresh-btn {
-                background: #667eea;
-                color: white;
-                border: none;
-                padding: 12px 24px;
-                border-radius: 6px;
-                cursor: pointer;
-                font-weight: 600;
-                margin-bottom: 20px;
-            }
-            .refresh-btn:hover { background: #5a6fd8; }
+            body { font-family: system-ui, sans-serif; margin: 40px; background: #f5f5f5; }
+            .container { max-width: 1000px; margin: 0 auto; }
+            .header { background: #6366f1; color: white; padding: 30px; border-radius: 12px; text-align: center; margin-bottom: 30px; }
+            .header h1 { margin: 0 0 10px 0; font-size: 2em; }
+            .header p { margin: 0; opacity: 0.9; }
+            .dashboard { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+            .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid #6366f1; }
+            .card-title { color: #6366f1; font-weight: 600; text-transform: uppercase; font-size: 0.9em; margin-bottom: 20px; letter-spacing: 0.5px; }
+            .metric { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+            .metric-label { color: #666; font-size: 0.95em; }
+            .metric-value { font-weight: 700; font-size: 1.3em; color: #333; }
+            .insights { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .insights h3 { color: #6366f1; margin-bottom: 15px; }
+            .insights p { color: #666; line-height: 1.6; margin-bottom: 10px; }
+            .refresh { background: #6366f1; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin-bottom: 20px; }
+            .refresh:hover { background: #5856eb; }
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header">
                 <h1>Morpha Admin Dashboard</h1>
-                <p>Real-time business metrics and insights</p>
-                <button class="refresh-btn" onclick="window.location.reload()">Refresh Data</button>
+                <p>Real Interest & Engagement Metrics</p>
+                <button class="refresh" onclick="location.reload()">Refresh Data</button>
             </div>
-            
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-title">Overall Performance</div>
-                    <div class="metric-item">
-                        <span class="metric-label">Total Documents Uploaded</span>
-                        <span class="metric-value">${dashboardData.overall_performance.total_documents_uploaded}</span>
+
+            <div class="dashboard">
+                <div class="card">
+                    <div class="card-title">Visitor Interest</div>
+                    <div class="metric">
+                        <span class="metric-label">Personal Uploads</span>
+                        <span class="metric-value">${metrics.personal_uploads}</span>
                     </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Total Chat Conversations</span>
-                        <span class="metric-value">${dashboardData.overall_performance.total_chat_conversations}</span>
+                    <div class="metric">
+                        <span class="metric-label">Privacy Demos</span>
+                        <span class="metric-value">${metrics.privacy_demos}</span>
                     </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Total AI Cost</span>
-                        <span class="metric-value">${dashboardData.overall_performance.total_ai_cost}</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-label">AI Tokens Used</span>
-                        <span class="metric-value">${dashboardData.overall_performance.ai_tokens_used}</span>
+                    <div class="metric">
+                        <span class="metric-label">Upload Conversion</span>
+                        <span class="metric-value">${metrics.upload_conversion}%</span>
                     </div>
                 </div>
 
-                <div class="metric-card">
-                    <div class="metric-title">Today's Activity</div>
-                    <div class="metric-item">
-                        <span class="metric-label">Visitors Today</span>
-                        <span class="metric-value">${dashboardData.today_snapshot.visitors_today}</span>
+                <div class="card">
+                    <div class="card-title">User Engagement</div>
+                    <div class="metric">
+                        <span class="metric-label">Chat Adoption Rate</span>
+                        <span class="metric-value">${metrics.chat_adoption}%</span>
                     </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Documents Uploaded Today</span>
-                        <span class="metric-value">${dashboardData.today_snapshot.documents_uploaded_today}</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Upload Conversion Rate</span>
-                        <span class="metric-value">${dashboardData.today_snapshot.upload_conversion_rate}</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Engaged Users Rate</span>
-                        <span class="metric-value">${dashboardData.today_snapshot.engaged_users_rate}</span>
+                    <div class="metric">
+                        <span class="metric-label">Multi-Action Users</span>
+                        <span class="metric-value">${metrics.multi_action}%</span>
                     </div>
                 </div>
 
-                <div class="metric-card">
-                    <div class="metric-title">Business Insights</div>
-                    <div class="metric-item">
-                        <span class="metric-label">Average Cost Per Upload</span>
-                        <span class="metric-value">${dashboardData.business_insights.average_cost_per_upload}</span>
-                    </div>
-                    <div class="metric-item">
-                        <span class="metric-label">Chat Usage Rate</span>
-                        <span class="metric-value">${dashboardData.business_insights.chat_usage_rate}</span>
-                    </div>
-                    <div class="metric-item">
+                <div class="card">
+                    <div class="card-title">Live Activity</div>
+                    <div class="metric">
                         <span class="metric-label">Active Sessions</span>
-                        <span class="metric-value">${dashboardData.business_insights.active_sessions}</span>
+                        <span class="metric-value">${metrics.active_sessions}</span>
                     </div>
-                    <div class="metric-item">
+                    <div class="metric">
                         <span class="metric-label">Documents in Memory</span>
-                        <span class="metric-value">${dashboardData.business_insights.documents_in_memory}</span>
+                        <span class="metric-value">${metrics.documents_in_memory}</span>
                     </div>
                 </div>
             </div>
 
-            <div class="explanation">
-                <h3>Metric Explanations:</h3>
-                <p><strong>Upload Conversion Rate:</strong> ${dashboardData.explanations.upload_conversion_rate}</p>
-                <p><strong>Engaged Users Rate:</strong> ${dashboardData.explanations.engaged_users_rate}</p>
-                <p><strong>Chat Usage Rate:</strong> ${dashboardData.explanations.chat_usage_rate}</p>
-                <p><strong>Average Cost Per Upload:</strong> ${dashboardData.explanations.average_cost_per_upload}</p>
+            <div class="insights">
+                <h3>Key Insights</h3>
+                <p><strong>Upload Conversion:</strong> Percentage of visitors who upload personal documents (excludes privacy demos)</p>
+                <p><strong>Chat Adoption:</strong> Percentage of personal uploads that generate chat conversations</p>
+                <p><strong>Multi-Action:</strong> Percentage of visitors who engage deeply (upload + chat, view red flags, etc.)</p>
+                <p><strong>Active Sessions:</strong> Number of people currently browsing the website</p>
             </div>
         </div>
     </body>
     </html>`;
 
-    res.send(htmlDashboard);
+    res.send(html);
 });
 
 
