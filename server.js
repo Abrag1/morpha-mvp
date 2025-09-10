@@ -320,18 +320,6 @@ function trackUsage(type, tokens = 0) {
     });
 }
 
-// Log document count periodically
-setInterval(() => {
-    console.log('Current documents in memory:', {
-        count: documents.length,
-        documents: documents.map(d => ({
-            id: d.id,
-            filename: d.filename,
-            uploadTime: d.uploadDate
-        }))
-    });
-}, 60000); // Every minute
-
 // File upload configuration with enhanced security
 const upload = multer({
     dest: 'uploads/',
@@ -743,7 +731,7 @@ INSTRUCTIONS:
 6. Provide specific reasoning for the risk level assigned
 
 Available text from document:
-${extractedText.substring(0, 6000)}
+${extractedText.substring(0, 15000)}
 
 Provide analysis in JSON format:
 {
