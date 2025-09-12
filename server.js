@@ -4,6 +4,36 @@ const multer = require('multer');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+// Analytics persistence functions
+function saveAnalytics() {
+    try {
+        const analyticsData = {
+            daily: sessionMetrics.daily,
+            sessions: sessionMetrics.sessions,
+            lastSaved: new Date().toISOString()
+        };
+        fs.writeFileSync('analytics.json', JSON.stringify(analyticsData, null, 2));
+        console.log('Analytics saved successfully');
+    } catch (error) {
+        console.error('Failed to save analytics:', error);
+    }
+}
+
+function loadAnalytics() {
+    try {
+        if (fs.existsSync('analytics.json')) {
+            const data = JSON.parse(fs.readFileSync('analytics.json', 'utf8'));
+            console.log('Analytics loaded successfully');
+            return {
+                daily: data.daily || {},
+                sessions: data.sessions || {}
+            };
+        }
+    } catch (error) {
+        console.error('Failed to load analytics:', error);
+    }
+    return { daily: {}, sessions: {} };
+}
 const OpenAI = require('openai');
 const pdfParse = require('pdf-parse');
 const rateLimit = require('express-rate-limit');
@@ -187,9 +217,10 @@ function logError(error, context = {}) {
 
 
 // Session-based metrics (no device tracking)
+const loadedData = loadAnalytics();
 const sessionMetrics = {
-    sessions: {}, // Active sessions
-    daily: {}, // Daily aggregates
+    sessions: loadedData.sessions, // Load saved active sessions
+    daily: loadedData.daily, // Load saved daily aggregates
     
     recordEvent: function(sessionId, event) {
         const today = new Date().toISOString().split('T')[0];
@@ -237,6 +268,8 @@ const sessionMetrics = {
         // Count action types
         this.daily[today].action_counts[event] = 
             (this.daily[today].action_counts[event] || 0) + 1;
+                    // Auto-save analytics data
+        saveAnalytics();
     },
     
     cleanOldData: function() {
@@ -255,8 +288,15 @@ const sessionMetrics = {
             if (new Date(this.sessions[sid].started) < oneDayAgo) {
                 delete this.sessions[sid];
             }
-        });
+
+                    // Save after cleanup
+        saveAnalytics();
+
+        }
+    );
     }
+    
+
 };
 
 // Input sanitization function
@@ -1354,6 +1394,10 @@ app.use((error, req, res, next) => {
 });
 
 // Start server
+// Periodic analytics backup (every 5 minutes)
+setInterval(() => {
+    saveAnalytics();
+}, 2 * 60 * 60 * 1000);
 app.listen(PORT, () => {
     console.log(`🚀 Morpha MVP Server running on http://localhost:${PORT}`);
     console.log(`🔒 Security features enabled`);
