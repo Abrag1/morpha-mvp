@@ -935,10 +935,10 @@ Contract Summary:
 
 User Question: ${sanitizedMessage}
 
-Contract Text (first 3000 chars):
-${document.extractedText.substring(0, 3000)}
+Contract Content:
+${document.extractedText.substring(0, 15000)}
 
-RESPONSE FORMAT REQUIREMENTS:
+RESPONSE GUIDELINES:
 - Answer the question directly and naturally (no "Direct Answer:" labels)
 - Use clear paragraph breaks between different points
 - Use bullet points for lists or multiple items  
