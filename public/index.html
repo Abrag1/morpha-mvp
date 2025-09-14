@@ -2544,25 +2544,38 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Mobile functionality
+// Mobile functionality with debugging
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileChatBtn = document.getElementById('mobileChatBtn');
     const mobileOverlay = document.getElementById('mobileOverlay');
     const mobileSidebar = document.getElementById('sidebar');
+    
+    console.log('Mobile elements check:', {
+        menuBtn: !!mobileMenuBtn,
+        chatBtn: !!mobileChatBtn,
+        overlay: !!mobileOverlay,
+        sidebar: !!mobileSidebar
+    });
 
-    // Mobile menu toggle
+    // Mobile menu toggle with debugging
     if (mobileMenuBtn) {
+        console.log('Mobile menu button found');
         mobileMenuBtn.addEventListener('click', function() {
+            console.log('Mobile menu clicked, current state:', isMobileSidebarOpen);
             isMobileSidebarOpen = !isMobileSidebarOpen;
             
             if (isMobileSidebarOpen) {
+                console.log('Opening sidebar');
                 mobileSidebar.classList.add('mobile-open');
                 mobileOverlay.classList.add('active');
             } else {
+                console.log('Closing sidebar');
                 mobileSidebar.classList.remove('mobile-open');
                 mobileOverlay.classList.remove('active');
             }
         });
+    } else {
+        console.log('Mobile menu button NOT found');
     }
 
     // Close mobile sidebar when overlay is clicked
@@ -2574,9 +2587,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Mobile chat button functionality
+    // Mobile chat button functionality with debugging
     if (mobileChatBtn) {
+        console.log('Mobile chat button found');
         mobileChatBtn.addEventListener('click', function() {
+            console.log('Mobile chat clicked, currentDocumentId:', currentDocumentId);
             if (!currentDocumentId) {
                 alert('Please upload a document first to start chatting.');
                 return;
@@ -2585,6 +2600,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Create mobile chat modal
             openMobileChatModal();
         });
+    } else {
+        console.log('Mobile chat button NOT found');
     }
 
     // Mobile chat modal function
