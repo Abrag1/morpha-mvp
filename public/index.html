@@ -943,6 +943,178 @@
     cursor: not-allowed;
 }
 
+/* Mobile Header Buttons */
+.mobile-header-actions {
+    display: none;
+    gap: 10px;
+}
+
+.mobile-menu-btn,
+.mobile-chat-btn {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.mobile-menu-btn:hover,
+.mobile-chat-btn:hover {
+    background: #5a6fd8;
+}
+
+/* Mobile Layout */
+@media (max-width: 768px) {
+    /* Show mobile buttons, hide desktop buttons */
+    .mobile-header-actions {
+        display: flex;
+    }
+    
+    .app-actions {
+        display: none;
+    }
+    
+    /* App content mobile layout */
+    .app-content {
+        flex-direction: column;
+        height: calc(100vh - 60px);
+    }
+    
+    /* Hide sidebar by default on mobile */
+    .sidebar {
+        display: none;
+        position: fixed;
+        top: 60px;
+        left: 0;
+        width: 80%;
+        height: calc(100vh - 60px);
+        background: white;
+        z-index: 1000;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        overflow-y: auto;
+    }
+    
+    .sidebar.mobile-open {
+        display: block;
+    }
+    
+    /* Mobile overlay when sidebar is open */
+    .mobile-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+    }
+    
+    .mobile-overlay.active {
+        display: block;
+    }
+    
+    /* Main content takes full width on mobile */
+    .main-panel {
+        flex: 1;
+        max-width: 100%;
+        min-width: 100%;
+    }
+    
+    /* Hide chat panel and resizer on mobile */
+    .chat-panel {
+        display: none;
+    }
+    
+    .panel-resizer {
+        display: none;
+    }
+    
+    /* Make document content scrollable */
+    .document-content {
+        max-height: calc(100vh - 200px);
+        overflow-y: auto;
+    }
+}
+
+/* Mobile Chat Modal */
+.mobile-chat-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 2000;
+}
+
+.mobile-chat-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70vh;
+    background: white;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.mobile-chat-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mobile-chat-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.mobile-chat-messages {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.mobile-chat-input {
+    padding: 15px 20px;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    gap: 10px;
+}
+
+.mobile-chat-input input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+}
+
+.mobile-chat-input button {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .mobile-chat-modal {
+        display: block;
+    }
+}
+
 </style>
 
 
@@ -998,7 +1170,15 @@
         <!-- Header -->
         <div class="app-header">
             <div class="app-logo">Morpha</div>
-            <div class="app-actions">
+
+                <!-- Mobile-only buttons -->
+            <div class="mobile-header-actions">
+                <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+                <button class="mobile-chat-btn" id="mobileChatBtn">💬 Chat</button>
+            </div>
+            
+            <!-- Desktop buttons -->
+                    <div class="app-actions">
                 <button class="btn-secondary btn-disabled" disabled title="Coming Soon - Export functionality will be available in a future update">
     Export Summary <span class="coming-soon-badge">Coming Soon</span>
                 </button>
@@ -1007,6 +1187,7 @@
         </div>
 
         <div class="app-content">
+        <div class="mobile-overlay" id="mobileOverlay"></div>
             <!-- Sidebar -->
             <div class="sidebar" id="sidebar">
                 <button class="sidebar-toggle" id="sidebarToggle">☰</button>
@@ -1131,6 +1312,7 @@
     let lastUploadedFile = null;
     let isCollapsed = false;
     let isResizing = false;
+    let isMobileSidebarOpen = false;
 
     // Cookie consent management
 function checkCookieConsent() {
@@ -2361,6 +2543,104 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('Feedback elements not found:', {feedbackBtn, feedbackModal}); // Debug line
     }
 });
+
+// Mobile functionality
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileChatBtn = document.getElementById('mobileChatBtn');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+    const mobileSidebar = document.getElementById('sidebar');
+
+    // Mobile menu toggle
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', function() {
+            isMobileSidebarOpen = !isMobileSidebarOpen;
+            
+            if (isMobileSidebarOpen) {
+                mobileSidebar.classList.add('mobile-open');
+                mobileOverlay.classList.add('active');
+            } else {
+                mobileSidebar.classList.remove('mobile-open');
+                mobileOverlay.classList.remove('active');
+            }
+        });
+    }
+
+    // Close mobile sidebar when overlay is clicked
+    if (mobileOverlay) {
+        mobileOverlay.addEventListener('click', function() {
+            isMobileSidebarOpen = false;
+            mobileSidebar.classList.remove('mobile-open');
+            mobileOverlay.classList.remove('active');
+        });
+    }
+
+    // Mobile chat button functionality
+    if (mobileChatBtn) {
+        mobileChatBtn.addEventListener('click', function() {
+            if (!currentDocumentId) {
+                alert('Please upload a document first to start chatting.');
+                return;
+            }
+            
+            // Create mobile chat modal
+            openMobileChatModal();
+        });
+    }
+
+    // Mobile chat modal function
+    function openMobileChatModal() {
+        const chatModal = document.createElement('div');
+        chatModal.className = 'mobile-chat-modal';
+        chatModal.innerHTML = `
+            <div class="mobile-chat-content">
+                <div class="mobile-chat-header">
+                    <h3>Chat with Document</h3>
+                    <button class="mobile-chat-close">&times;</button>
+                </div>
+                <div class="mobile-chat-messages" id="mobileChatMessages">
+                    ${document.getElementById('chatMessages').innerHTML}
+                </div>
+                <div class="mobile-chat-input">
+                    <input type="text" id="mobileChatInput" placeholder="Ask a question...">
+                    <button id="mobileSendBtn">Send</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(chatModal);
+        
+        // Close modal functionality
+        chatModal.querySelector('.mobile-chat-close').addEventListener('click', function() {
+            document.body.removeChild(chatModal);
+        });
+        
+        // Mobile chat input functionality
+        const mobileChatInput = chatModal.querySelector('#mobileChatInput');
+        const mobileSendBtn = chatModal.querySelector('#mobileSendBtn');
+        
+        mobileSendBtn.addEventListener('click', function() {
+            const message = mobileChatInput.value.trim();
+            if (message) {
+                // Use existing sendMessage function but update mobile chat
+                mobileChatInput.value = message;
+                document.getElementById('chatInput').value = message;
+                sendMessage();
+                mobileChatInput.value = '';
+                
+                // Update mobile chat messages
+                setTimeout(() => {
+                    document.getElementById('mobileChatMessages').innerHTML = 
+                        document.getElementById('chatMessages').innerHTML;
+                }, 1000);
+            }
+        });
+        
+        mobileChatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                mobileSendBtn.click();
+            }
+        });
+    }
 
 </script>
 
