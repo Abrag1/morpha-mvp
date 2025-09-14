@@ -2580,8 +2580,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Mobile chat button functionality
         if (mobileChatBtn) {
             mobileChatBtn.addEventListener('click', function() {
-                // Use the outer scope currentDocumentId variable
-                if (!currentDocumentId) {
+                // Check if we have a document by looking at the DOM instead
+                const documentTitle = document.getElementById('documentTitle');
+                const hasDocument = documentTitle && documentTitle.textContent !== 'Contract Analysis';
+                
+                if (!hasDocument) {
                     alert('Please upload a document first to start chatting.');
                     return;
                 }
