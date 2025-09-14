@@ -1057,7 +1057,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 70vh;
+    height: 85vh;
     background: white;
     border-radius: 12px 12px 0 0;
     display: flex;
@@ -2643,6 +2643,49 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             
             document.body.appendChild(chatModal);
+
+        // Make suggested questions clickable in mobile modal
+            const mobileSuggestionBtns = chatModal.querySelectorAll('.suggestion-btn');
+            mobileSuggestionBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const question = this.textContent.trim();
+                    const mainChatInput = document.getElementById('chatInput');
+                    const mainSendBtn = document.getElementById('sendBtn');
+                    
+                    if (mainChatInput && mainSendBtn) {
+                    mainChatInput.value = message;
+                    
+                    // Disable mobile send button to prevent duplicate requests
+                    mobileSendBtn.disabled = true;
+                    mobileSendBtn.textContent = 'Sending...';
+                    
+                    mainSendBtn.click(); // Trigger the existing send functionality
+                    mobileChatInput.value = '';
+                    
+                    // Re-enable after delay
+                    setTimeout(() => {
+                        mobileSendBtn.disabled = false;
+                        mobileSendBtn.textContent = 'Send';
+                    }, 2000);
+                        
+                        // Update mobile display after delay for response
+                        setTimeout(() => {
+                            const mobileChatMessages = chatModal.querySelector('#mobileChatMessages');
+                            if (mobileChatMessages) {
+                                mobileChatMessages.innerHTML = document.getElementById('chatMessages').innerHTML;
+                            }
+                        }, 3000); // Wait 3 seconds for response
+                        
+                        // Also update after a longer delay in case response takes longer
+                        setTimeout(() => {
+                            const mobileChatMessages = chatModal.querySelector('#mobileChatMessages');
+                            if (mobileChatMessages) {
+                                mobileChatMessages.innerHTML = document.getElementById('chatMessages').innerHTML;
+                            }
+                        }, 6000); // Wait 6 seconds as backup
+                    }
+                });
+            });
             
             // Close modal functionality
             chatModal.querySelector('.mobile-chat-close').addEventListener('click', function() {
