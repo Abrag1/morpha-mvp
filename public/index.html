@@ -1057,7 +1057,7 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 85vh;
+    height: 90vh;
     background: white;
     border-radius: 12px 12px 0 0;
     display: flex;
@@ -2697,24 +2697,31 @@ document.addEventListener('DOMContentLoaded', function() {
             const mobileSendBtn = chatModal.querySelector('#mobileSendBtn');
             
             mobileSendBtn.addEventListener('click', function() {
-                const message = mobileChatInput.value.trim();
-                if (message) {
+                const userMessage = mobileChatInput.value.trim();
+                if (userMessage) {
                     // Set the main chat input and trigger its send
                     const mainChatInput = document.getElementById('chatInput');
                     const mainSendBtn = document.getElementById('sendBtn');
                     
                     if (mainChatInput && mainSendBtn) {
-                        mainChatInput.value = message;
-                        mainSendBtn.click(); // Trigger the existing send functionality
+                        mainChatInput.value = userMessage;
+                        
+                        // Disable mobile send button to prevent duplicate requests
+                        mobileSendBtn.disabled = true;
+                        mobileSendBtn.textContent = 'Sending...';
+                        
+                        mainSendBtn.click();
                         mobileChatInput.value = '';
                         
-                        // Update mobile chat messages after response
+                        // Update mobile chat display after response
                         setTimeout(() => {
                             const mobileChatMessages = document.getElementById('mobileChatMessages');
                             if (mobileChatMessages) {
                                 mobileChatMessages.innerHTML = document.getElementById('chatMessages').innerHTML;
                             }
-                        }, 2000);
+                            mobileSendBtn.disabled = false;
+                            mobileSendBtn.textContent = 'Send';
+                        }, 3000);
                     }
                 }
             });
