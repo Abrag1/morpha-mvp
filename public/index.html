@@ -1115,6 +1115,31 @@
     }
 }
 
+.mobile-suggested-questions {
+    padding: 15px 20px;
+    border-top: 1px solid #e0e0e0;
+    max-height: 120px;
+    overflow-y: auto;
+}
+
+.mobile-suggested-questions .suggestion-btn {
+    display: block;
+    width: 100%;
+    background: #f8f9ff;
+    border: 1px solid #e0e0e0;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-size: 0.85em;
+    text-align: left;
+}
+
+.mobile-suggested-questions .suggestion-btn:hover {
+    background: #e8ebff;
+    border-color: #667eea;
+}
+
 </style>
 
 
@@ -2607,6 +2632,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="mobile-chat-messages" id="mobileChatMessages">
                         ${document.getElementById('chatMessages').innerHTML}
                     </div>
+                    <div class="mobile-suggested-questions">
+                        ${document.getElementById('suggestedQuestions').innerHTML}
+                    </div>
                     <div class="mobile-chat-input">
                         <input type="text" id="mobileChatInput" placeholder="Ask a question...">
                         <button id="mobileSendBtn">Send</button>
@@ -2628,18 +2656,23 @@ document.addEventListener('DOMContentLoaded', function() {
             mobileSendBtn.addEventListener('click', function() {
                 const message = mobileChatInput.value.trim();
                 if (message) {
-                    // Use existing sendMessage function
-                    document.getElementById('chatInput').value = message;
-                    sendMessage();
-                    mobileChatInput.value = '';
+                    // Set the main chat input and trigger its send
+                    const mainChatInput = document.getElementById('chatInput');
+                    const mainSendBtn = document.getElementById('sendBtn');
                     
-                    // Update mobile chat messages after a delay
-                    setTimeout(() => {
-                        const mobileChatMessages = document.getElementById('mobileChatMessages');
-                        if (mobileChatMessages) {
-                            mobileChatMessages.innerHTML = document.getElementById('chatMessages').innerHTML;
-                        }
-                    }, 1000);
+                    if (mainChatInput && mainSendBtn) {
+                        mainChatInput.value = message;
+                        mainSendBtn.click(); // Trigger the existing send functionality
+                        mobileChatInput.value = '';
+                        
+                        // Update mobile chat messages after response
+                        setTimeout(() => {
+                            const mobileChatMessages = document.getElementById('mobileChatMessages');
+                            if (mobileChatMessages) {
+                                mobileChatMessages.innerHTML = document.getElementById('chatMessages').innerHTML;
+                            }
+                        }, 2000);
+                    }
                 }
             });
             
