@@ -12,28 +12,54 @@ function saveAnalytics() {
             sessions: sessionMetrics.sessions,
             lastSaved: new Date().toISOString()
         };
+        
+        console.log('Saving analytics...');
+        console.log('Daily data keys:', Object.keys(analyticsData.daily));
+        console.log('Sessions data keys:', Object.keys(analyticsData.sessions));
+        
         fs.writeFileSync('analytics.json', JSON.stringify(analyticsData, null, 2));
-        console.log('Analytics saved successfully');
+        console.log('Analytics saved successfully to analytics.json');
+        
+        // Verify the save worked
+        if (fs.existsSync('analytics.json')) {
+            const fileSize = fs.statSync('analytics.json').size;
+            console.log('analytics.json file size:', fileSize, 'bytes');
+        }
     } catch (error) {
         console.error('Failed to save analytics:', error);
+        console.error('Error details:', error.message);
     }
 }
 
 function loadAnalytics() {
     try {
+        console.log('Attempting to load analytics from analytics.json...');
         if (fs.existsSync('analytics.json')) {
-            const data = JSON.parse(fs.readFileSync('analytics.json', 'utf8'));
+            console.log('analytics.json file exists, reading...');
+            const fileContent = fs.readFileSync('analytics.json', 'utf8');
+            console.log('File content length:', fileContent.length);
+            console.log('First 200 characters:', fileContent.substring(0, 200));
+            
+            const data = JSON.parse(fileContent);
             console.log('Analytics loaded successfully');
+            console.log('Daily keys found:', Object.keys(data.daily || {}));
+            console.log('Sessions keys found:', Object.keys(data.sessions || {}));
+            
             return {
                 daily: data.daily || {},
                 sessions: data.sessions || {}
             };
+        } else {
+            console.log('analytics.json file does not exist, starting fresh');
         }
     } catch (error) {
         console.error('Failed to load analytics:', error);
+        console.error('Error details:', error.message);
     }
     return { daily: {}, sessions: {} };
 }
+
+
 const OpenAI = require('openai');
 const pdfParse = require('pdf-parse');
 const rateLimit = require('express-rate-limit');
@@ -1403,6 +1429,11 @@ app.listen(PORT, () => {
     console.log(`🔒 Security features enabled`);
     console.log(`📊 Usage tracking active`);
     console.log(`⚡ Rate limiting configured`);
+
+    // Force save analytics on startup to test save function
+    console.log('Testing analytics save on startup...');
+    saveAnalytics();
+
 });
 
 module.exports = app;
