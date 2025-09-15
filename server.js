@@ -253,12 +253,12 @@ const sessionMetrics = {
         
         // Initialize daily metrics
         if (!this.daily[today]) {
-            this.daily[today] = {
-                total_visitors: 0,
-                personal_uploads: 0,
-                sessions_with_upload: new Set(),
-                sessions_with_multiple_actions: new Set(),
-                action_counts: {}
+        this.daily[today] = {
+            total_visitors: 0,
+            personal_uploads: 0,
+            sessions_with_upload: [],
+            sessions_with_multiple_actions: [],
+            action_counts: {}
             };
         }
         
@@ -279,7 +279,9 @@ const sessionMetrics = {
         if (event === 'personal_upload') {
             this.sessions[sessionId].has_upload = true;
             this.daily[today].personal_uploads++;
-            this.daily[today].sessions_with_upload.add(sessionId);
+            if (!this.daily[today].sessions_with_upload.includes(sessionId)) {
+                this.daily[today].sessions_with_upload.push(sessionId);
+            }
         }
         
         // Check for multiple meaningful actions
@@ -288,7 +290,9 @@ const sessionMetrics = {
         );
         
         if (meaningfulActions.length > 1) {
-            this.daily[today].sessions_with_multiple_actions.add(sessionId);
+            if (!this.daily[today].sessions_with_multiple_actions.includes(sessionId)) {
+                this.daily[today].sessions_with_multiple_actions.push(sessionId);
+            }
         }
         
         // Count action types
@@ -496,22 +500,25 @@ app.get('/admin/stats', (req, res) => {
         documentsWithChat.add(conv.documentId);
     });
 
-    // Calculate metrics
-    const metrics = {
-        personal_uploads: todayMetrics.personal_uploads,
-        privacy_demos: Math.max(0, usageStats.totalUploads - todayMetrics.personal_uploads),
-        upload_conversion: todayMetrics.total_visitors > 0 
-            ? ((todayMetrics.personal_uploads / todayMetrics.total_visitors) * 100).toFixed(1)
+    // Calculate metrics with proper Set size handling
+        const sessionsWithUpload = Array.from(todayMetrics.sessions_with_upload || []).length;
+        const sessionsWithMultipleActions = Array.from(todayMetrics.sessions_with_multiple_actions || []).length;
+
+        const metrics = {
+        personal_uploads: todayMetrics.personal_uploads || 0,
+        privacy_demos: Math.max(0, (usageStats.totalUploads || 0) - (todayMetrics.personal_uploads || 0)),
+        upload_conversion: todayMetrics.total_visitors > 0
+            ? (((todayMetrics.personal_uploads || 0) / todayMetrics.total_visitors) * 100).toFixed(1)
             : '0.0',
-        chat_adoption: todayMetrics.personal_uploads > 0
-            ? ((documentsWithChat.size / todayMetrics.personal_uploads) * 100).toFixed(1)
+        chat_adoption: (todayMetrics.personal_uploads || 0) > 0
+            ? ((documentsWithChat.size / (todayMetrics.personal_uploads || 0)) * 100).toFixed(1)
             : '0.0',
         multi_action: todayMetrics.total_visitors > 0
-            ? ((todayMetrics.sessions_with_multiple_actions.size / todayMetrics.total_visitors) * 100).toFixed(1)
+            ? ((sessionsWithMultipleActions / todayMetrics.total_visitors) * 100).toFixed(1)
             : '0.0',
         active_sessions: sessions.size,
         documents_in_memory: documents.length
-    };
+        };
 
     const html = `
     <!DOCTYPE html>
