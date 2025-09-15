@@ -2641,91 +2641,58 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
             `;
-            
+
             document.body.appendChild(chatModal);
 
-        // Make suggested questions clickable in mobile modal
+            // FIXED: Auto-refresh mobile chat every 2 seconds while modal is open
+            const refreshInterval = setInterval(() => {
+                const mobileChatMessages = chatModal.querySelector('#mobileChatMessages');
+                const mainChatMessages = document.getElementById('chatMessages');
+                if (mobileChatMessages && mainChatMessages) {
+                    mobileChatMessages.innerHTML = mainChatMessages.innerHTML;
+                    mobileChatMessages.scrollTop = mobileChatMessages.scrollHeight;
+                }
+            }, 2000);
+
+            // Make suggested questions clickable in mobile modal
             const mobileSuggestionBtns = chatModal.querySelectorAll('.suggestion-btn');
             mobileSuggestionBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
-                    const question = this.textContent.trim();
+                    const question = this.textContent.trim(); // FIXED: was 'message', now 'question'
                     const mainChatInput = document.getElementById('chatInput');
                     const mainSendBtn = document.getElementById('sendBtn');
-                    
+
                     if (mainChatInput && mainSendBtn) {
-                    mainChatInput.value = question;
-                    
-                    // Disable mobile send button to prevent duplicate requests
-                    mobileSendBtn.disabled = true;
-                    mobileSendBtn.textContent = 'Sending...';
-                    
-                    mainSendBtn.click(); // Trigger the existing send functionality
-                    mobileChatInput.value = '';
-                    
-                    // Re-enable after delay
-                    setTimeout(() => {
-                        mobileSendBtn.disabled = false;
-                        mobileSendBtn.textContent = 'Send';
-                    }, 2000);
-                        
-                        // Update mobile display after delay for response
-                        setTimeout(() => {
-                            const mobileChatMessages = chatModal.querySelector('#mobileChatMessages');
-                            if (mobileChatMessages) {
-                                mobileChatMessages.innerHTML = document.getElementById('chatMessages').innerHTML;
-                            }
-                        }, 3000); // Wait 3 seconds for response
-                        
-                        // Also update after a longer delay in case response takes longer
-                        setTimeout(() => {
-                            const mobileChatMessages = chatModal.querySelector('#mobileChatMessages');
-                            if (mobileChatMessages) {
-                                mobileChatMessages.innerHTML = document.getElementById('chatMessages').innerHTML;
-                            }
-                        }, 6000); // Wait 6 seconds as backup
+                        mainChatInput.value = question; // FIXED: was 'message', now 'question'
+                        mainSendBtn.click();
                     }
                 });
             });
-            
+
             // Close modal functionality
             chatModal.querySelector('.mobile-chat-close').addEventListener('click', function() {
+                clearInterval(refreshInterval); // FIXED: Stop refresh when modal closes
                 document.body.removeChild(chatModal);
             });
-            
+
             // Mobile chat input functionality
             const mobileChatInput = chatModal.querySelector('#mobileChatInput');
             const mobileSendBtn = chatModal.querySelector('#mobileSendBtn');
-            
+
             mobileSendBtn.addEventListener('click', function() {
                 const userMessage = mobileChatInput.value.trim();
                 if (userMessage) {
-                    // Set the main chat input and trigger its send
                     const mainChatInput = document.getElementById('chatInput');
                     const mainSendBtn = document.getElementById('sendBtn');
-                    
+
                     if (mainChatInput && mainSendBtn) {
                         mainChatInput.value = userMessage;
-                        
-                        // Disable mobile send button to prevent duplicate requests
-                        mobileSendBtn.disabled = true;
-                        mobileSendBtn.textContent = 'Sending...';
-                        
                         mainSendBtn.click();
                         mobileChatInput.value = '';
-                        
-                        // Update mobile chat display after response
-                        setTimeout(() => {
-                            const mobileChatMessages = document.getElementById('mobileChatMessages');
-                            if (mobileChatMessages) {
-                                mobileChatMessages.innerHTML = document.getElementById('chatMessages').innerHTML;
-                            }
-                            mobileSendBtn.disabled = false;
-                            mobileSendBtn.textContent = 'Send';
-                        }, 3000);
                     }
                 }
             });
-            
+
             mobileChatInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
                     mobileSendBtn.click();
