@@ -873,14 +873,16 @@ documents.push(documentInfo);
 
 // Track personal uploads (exclude privacy policy demo)
 const isPrivacyDemo = req.file.originalname === 'Morpha_Privacy_Policy.pdf' || 
-                      extractedText.includes('Morpha Privacy Policy') ||
-                      extractedText.includes('Last updated September 06, 2025');
+                      extractedText.includes('Morpha ("Company," "we," "us," or "our")') ||
+                      extractedText.includes('Last updated September 06, 2025') ||
+                      extractedText.includes('support@getmorpha.com');
 
 if (!isPrivacyDemo) {
-    // Generate session ID from IP for tracking
-    const sessionId = clientIP.replace(/[^\w]/g, '') + '_' + Date.now().toString(36).slice(-6);
+    // Try to get session ID from request headers or generate consistent one
+    const sessionId = req.headers['x-session-id'] || 
+                     ('upload_' + clientIP.replace(/[^\w]/g, '') + '_' + Math.random().toString(36).substring(2, 8));
     sessionMetrics.recordEvent(sessionId, 'personal_upload');
-    console.log('Tracked personal upload for file:', req.file.originalname);
+    console.log('Tracked personal upload for file:', req.file.originalname, 'Session:', sessionId.slice(-8));
 } else {
     console.log('Privacy demo detected, not counting as personal upload');
 }
