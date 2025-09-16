@@ -841,8 +841,6 @@ Provide analysis in JSON format:
 
         // Track usage
         const tokensUsed = analysis.usage?.total_tokens || 0;
-        trackUsage('upload', tokensUsed);
-        session.documentCount++;
 
         let analysisResult;
         try {
