@@ -253,12 +253,13 @@ const sessionMetrics = {
         
         // Initialize daily metrics
         if (!this.daily[today]) {
-        this.daily[today] = {
-            total_visitors: 0,
-            personal_uploads: 0,
-            sessions_with_upload: [],
-            sessions_with_multiple_actions: [],
-            action_counts: {}
+            this.daily[today] = {
+                total_visitors: 0,
+                personal_uploads: 0,
+                privacy_demos: 0,
+                sessions_with_upload: [],
+                sessions_with_multiple_actions: [],
+                action_counts: {}
             };
         }
         
@@ -284,6 +285,14 @@ const sessionMetrics = {
                 this.daily[today].sessions_with_upload.push(sessionId);
             }
         }
+
+        // Track privacy demos
+            if (event === 'privacy_demo') {
+                if (!this.daily[today].privacy_demos) {
+                    this.daily[today].privacy_demos = 0;
+                }
+                this.daily[today].privacy_demos++;
+}
         
         // Check for multiple meaningful actions
         const meaningfulActions = this.sessions[sessionId].actions.filter(
@@ -507,7 +516,7 @@ app.get('/admin/stats', (req, res) => {
 
         const metrics = {
         personal_uploads: todayMetrics.personal_uploads || 0,
-        privacy_demos: Math.max(0, (usageStats.totalUploads || 0) - (todayMetrics.personal_uploads || 0)),
+        privacy_demos: todayMetrics.privacy_demos || 0,
         upload_conversion: todayMetrics.total_visitors > 0
             ? (((todayMetrics.personal_uploads || 0) / todayMetrics.total_visitors) * 100).toFixed(1)
             : '0.0',
@@ -872,19 +881,27 @@ Provide analysis in JSON format:
 documents.push(documentInfo);
 
 // Track personal uploads (exclude privacy policy demo)
-const isPrivacyDemo = req.file.originalname === 'Morpha_Privacy_Policy.pdf' || 
-                      extractedText.includes('Morpha ("Company," "we," "us," or "our")') ||
-                      extractedText.includes('Last updated September 06, 2025') ||
-                      extractedText.includes('support@getmorpha.com');
+const isPrivacyDemo = req.file.originalname === 'Morpha_Privacy_Policy.pdf';
+
+console.log('Upload detection:', {
+    filename: req.file.originalname,
+    isPrivacyDemo: isPrivacyDemo
+});
 
 if (!isPrivacyDemo) {
-    // Try to get session ID from request headers or generate consistent one
-    const sessionId = req.headers['x-session-id'] || 
-                     ('upload_' + clientIP.replace(/[^\w]/g, '') + '_' + Math.random().toString(36).substring(2, 8));
+    // Track personal upload
+    const frontendSessionId = global.sessionIPMap ? global.sessionIPMap.get(clientIP) : null;
+    const sessionId = frontendSessionId || ('upload_' + clientIP.replace(/[^\w]/g, '') + '_' + Math.random().toString(36).substring(2, 8));
+    
     sessionMetrics.recordEvent(sessionId, 'personal_upload');
-    console.log('Tracked personal upload for file:', req.file.originalname, 'Session:', sessionId.slice(-8));
+    console.log('Tracked personal upload for file:', req.file.originalname, 'Frontend session:', !!frontendSessionId, 'Session:', sessionId.slice(-8));
 } else {
-    console.log('Privacy demo detected, not counting as personal upload');
+    // Track privacy demo
+    const frontendSessionId = global.sessionIPMap ? global.sessionIPMap.get(clientIP) : null;
+    const sessionId = frontendSessionId || ('demo_' + clientIP.replace(/[^\w]/g, '') + '_' + Math.random().toString(36).substring(2, 8));
+    
+    sessionMetrics.recordEvent(sessionId, 'privacy_demo');
+    console.log('Tracked privacy demo, not counting as personal upload');
 }
 
 // Clean up original uploaded file
