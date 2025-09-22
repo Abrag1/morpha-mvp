@@ -4,31 +4,51 @@ const multer = require('multer');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+
 // Analytics persistence functions
+// Add flags to prevent multiple simultaneous saves
+let isSaving = false;
+let saveTimeout = null;
+
 function saveAnalytics() {
+    // Prevent multiple simultaneous saves
+    if (isSaving) {
+        return;
+    }
+    
     try {
+        isSaving = true;
+        
         const analyticsData = {
             daily: sessionMetrics.daily,
             sessions: sessionMetrics.sessions,
             lastSaved: new Date().toISOString()
         };
-        
-        console.log('Saving analytics...');
-        console.log('Daily data keys:', Object.keys(analyticsData.daily));
-        console.log('Sessions data keys:', Object.keys(analyticsData.sessions));
-        
-        fs.writeFileSync('analytics.json', JSON.stringify(analyticsData, null, 2));
-        console.log('Analytics saved successfully to analytics.json');
-        
-        // Verify the save worked
-        if (fs.existsSync('analytics.json')) {
-            const fileSize = fs.statSync('analytics.json').size;
-            console.log('analytics.json file size:', fileSize, 'bytes');
+       
+        // Minimal logging only (removed excessive console.log statements)
+        if (process.env.NODE_ENV !== 'production') {
+            console.log('Analytics saved - Daily entries:', Object.keys(analyticsData.daily).length, 'Sessions:', Object.keys(analyticsData.sessions).length);
         }
+       
+        fs.writeFileSync('analytics.json', JSON.stringify(analyticsData, null, 2));
+        
     } catch (error) {
-        console.error('Failed to save analytics:', error);
-        console.error('Error details:', error.message);
+        console.error('Analytics save failed:', error.message);
+    } finally {
+        isSaving = false;
     }
+}
+
+// Debounced save function to prevent rapid successive calls
+function debouncedSaveAnalytics() {
+    if (saveTimeout) {
+        clearTimeout(saveTimeout);
+    }
+    
+    saveTimeout = setTimeout(() => {
+        saveAnalytics();
+        saveTimeout = null;
+    }, 2000); // Wait 2 seconds before saving
 }
 
 function loadAnalytics() {
@@ -309,7 +329,7 @@ const sessionMetrics = {
         this.daily[today].action_counts[event] = 
             (this.daily[today].action_counts[event] || 0) + 1;
                     // Auto-save analytics data
-        saveAnalytics();
+        debouncedSaveAnalytics();
     },
     
     cleanOldData: function() {
@@ -330,7 +350,7 @@ const sessionMetrics = {
             }
 
                     // Save after cleanup
-        saveAnalytics();
+        debouncedSaveAnalytics();
 
         }
     );
@@ -1461,8 +1481,8 @@ app.use((error, req, res, next) => {
 // Start server
 // Periodic analytics backup (every 5 minutes)
 setInterval(() => {
-    saveAnalytics();
-}, 2 * 60 * 60 * 1000);
+    debouncedSaveAnalytics();
+}, 30 * 60 * 1000);
 app.listen(PORT, () => {
     console.log(`🚀 Morpha MVP Server running on http://localhost:${PORT}`);
     console.log(`🔒 Security features enabled`);
