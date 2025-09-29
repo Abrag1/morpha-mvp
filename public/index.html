@@ -809,31 +809,36 @@
     overflow: hidden;
 }
 
-/* demo privacy button style */ 
-.demo-privacy-btn {
+/* Large prominent demo button */
+.demo-privacy-btn-large {
     background: #667eea;
     color: white;
     border: none;
-    padding: 15px 30px;
+    padding: 18px 40px;
     border-radius: 8px;
-    font-size: 1.05em;
-    font-weight: 600;
+    font-size: 1.2em;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.2);
+    margin-bottom: 8px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
 }
 
-.demo-privacy-btn:hover {
+.demo-privacy-btn-large:hover {
     background: #5a6fd8;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
-.demo-text {
+/* Subtext under demo button */
+.demo-subtext {
     color: #666;
-    font-size: 0.9em;
-    margin: 10px 0;
+    font-size: 0.95em;
+    margin: 0;
+    text-align: center;
     font-style: italic;
 }
 
@@ -1175,15 +1180,20 @@
         </div>
         
     <div class="landing-footer">
-    <!-- New Privacy Demo Button -->
-    <button class="demo-privacy-btn" id="demoPrivacyBtn">
-        Review Our Privacy Policy Using Morpha
-    </button>
-    <p class="demo-text">See Morpha in action - try it on our own privacy policy</p>
+    <!-- Divider text -->
+    <p style="text-align: center; color: #999; font-size: 0.9em; margin: 20px 0 15px 0;">
+        ──── or try a demo first ────
+    </p>
     
-    <!-- Privacy Policy Link Only (Terms removed) -->
-    <div style="margin-top: 20px;">
-        <a href="/privacy" target="_blank" style="color: #667eea; text-decoration: none;">View Full Privacy Policy</a>
+    <!-- Prominent Demo Button -->
+    <button class="demo-privacy-btn-large" id="demoPrivacyBtn">
+        Try Morpha Now
+    </button>
+    <p class="demo-subtext">See it analyze our privacy policy</p>
+    
+    <!-- Small Privacy Policy Link -->
+    <div style="margin-top: 25px;">
+        <a href="/privacy" target="_blank" style="color: #999; text-decoration: none; font-size: 0.85em;">or view our full privacy policy</a>
     </div>
 </div>
         
