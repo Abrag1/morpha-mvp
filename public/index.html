@@ -377,6 +377,25 @@
             background: #5a6fd8;
         }
 
+        .upload-btn-sidebar {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .upload-btn-sidebar:hover {
+            background: #5a6fd8;
+        } 
+
+
         /* Main Panel */
         .main-panel {
     flex: 1;
@@ -528,7 +547,7 @@
         }
 
         .subtitle-secondary {
-            font-size: 0.6em !important;
+            font-size: 0.85em !important;
             color: #888;
             margin-top: 10px;
             margin-bottom: 13px;
@@ -1283,8 +1302,8 @@
     </div>
 </div>
 
-                <button class="upload-btn" id="uploadNewBtn">Upload New Document</button>
-                <button class="upload-btn btn-disabled" disabled title="Coming Soon - User accounts will be available in a future update">
+                <button class="upload-btn-sidebar" id="uploadNewBtn">Upload New Document</button>
+                <button class="upload-btn-sidebar btn-disabled" disabled title="Coming Soon - User accounts will be available in a future update">
                     <span>Create Account</span>
                     <span class="coming-soon-badge">Coming Soon</span>
                 </button>
