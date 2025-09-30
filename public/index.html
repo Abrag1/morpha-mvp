@@ -159,7 +159,7 @@
 }
 
 .coming-soon-badge {
-    font-size: 0.7em;
+    font-size: 0.65em;
     background: #fbbf24;
     color: #92400e;
     padding: 2px 6px;
@@ -1304,8 +1304,10 @@
 
                 <button class="upload-btn-sidebar" id="uploadNewBtn">Upload New Document</button>
                 <button class="upload-btn-sidebar btn-disabled" disabled title="Coming Soon - User accounts will be available in a future update">
-                    <span>Create Account</span>
-                    <span class="coming-soon-badge">Coming Soon</span>
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+                        <span>Create Account</span>
+                        <span class="coming-soon-badge">Coming Soon</span>
+                    </div>
                 </button>
             </div>
 
